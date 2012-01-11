@@ -89,7 +89,7 @@ public class Utily {
 	}
 
 	/**
-	 * 设置view状态
+	 * 设置view状态，可以不用添加xml文件
 	 * 
 	 * @param normal
 	 * @param active
