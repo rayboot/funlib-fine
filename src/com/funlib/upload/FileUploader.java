@@ -5,8 +5,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
+
+import com.funlib.network.NetWork;
+
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 
@@ -22,9 +28,12 @@ public class FileUploader implements Runnable {
 	private UploadListener mUploadlistener;
 	private String mServerUrl;
 	private HttpURLConnection mHttpConn;
+	
+	private Context mContext;
 
-	public FileUploader(UploadListener lis) {
+	public FileUploader(Context context, UploadListener lis) {
 		
+		mContext = context;
 		mUploadlistener = lis;
 	}
 	
@@ -100,7 +109,12 @@ public class FileUploader implements Runnable {
 		}
 
 		/* 允许Input、Output，不使用Cache */
-		mHttpConn = (HttpURLConnection) url.openConnection();
+		if(NetWork.isDefaultWap(mContext)){
+        	Proxy proxy = new Proxy(java.net.Proxy.Type.HTTP,new InetSocketAddress(NetWork.getDefaultWapProxy(), NetWork.getDefaultWapPort()));
+        	mHttpConn = (HttpURLConnection) url.openConnection(proxy);
+        }else{
+        	mHttpConn = (HttpURLConnection) url.openConnection();
+        }
 		mHttpConn.setDoInput(true);
 		mHttpConn.setDoOutput(true);
 		mHttpConn.setUseCaches(false);

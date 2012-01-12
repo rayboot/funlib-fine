@@ -282,7 +282,7 @@ public class DataCache implements Runnable{
 			}
 		}
 		
-		mBaseHttpRequest = new BaseHttpRequest();
+		mBaseHttpRequest = new BaseHttpRequest(mContext);
 		mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
 		mBaseHttpRequest.setReadTimeout(mReadTimeout);
 		

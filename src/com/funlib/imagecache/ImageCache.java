@@ -257,7 +257,7 @@ public class ImageCache implements Runnable{
 	 */
 	private byte[] featchBitmap(String imgUrl){
 		
-		mBaseHttpRequest = new BaseHttpRequest();
+		mBaseHttpRequest = new BaseHttpRequest(mContext);
 		mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
 		mBaseHttpRequest.setReadTimeout(mReadTimeout);
 		HttpResponse response = mBaseHttpRequest.request(mImageUrl, mRequestParams);
