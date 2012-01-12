@@ -4,16 +4,22 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.List;
-
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
+
+import com.funlib.network.NetWork;
+
+import android.content.Context;
+
 
 /**
  * 采用同步的方式提供基本的http请求方式，不建议直接使用
@@ -25,7 +31,13 @@ public class BaseHttpRequest {
 	private int mReadTimeout 			= 	5000;		/** 读取超时时间默认值 */
 	private int mConnectionTimeout 		= 	5000;		/** 连接超时时间默认值 */
 
+	private Context mContext;
 	private HttpPost mHttpPost = new HttpPost();
+	
+	public BaseHttpRequest(Context context){
+		
+		mContext = context;
+	}
 	
 	/**
 	 * 设置读操作超时时间，默认5s
@@ -75,6 +87,11 @@ public class BaseHttpRequest {
 				mHttpPost.setEntity(httpEntity);
 			}
 			HttpClient httpClient = new DefaultHttpClient();
+			if(NetWork.isDefaultWap(mContext)){
+	        	
+	        	HttpHost proxy = new HttpHost(NetWork.getDefaultWapProxy(), NetWork.getDefaultWapPort());
+	        	httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);  
+	        }
 			httpClient.getParams().setIntParameter(HttpConnectionParams.SO_TIMEOUT, mReadTimeout);
 			httpClient.getParams().setIntParameter(HttpConnectionParams.CONNECTION_TIMEOUT, mConnectionTimeout);
 			HttpResponse httpResponse = httpClient.execute(mHttpPost);

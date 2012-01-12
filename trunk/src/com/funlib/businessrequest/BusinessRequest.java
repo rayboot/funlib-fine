@@ -5,6 +5,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.util.EntityUtils;
+
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import com.funlib.basehttprequest.BaseHttpRequest;
@@ -26,6 +28,7 @@ public class BusinessRequest implements Runnable{
 	private int mConnectionTimeout 		= 	5000;		/** 连接超时时间默认值 */
 	private int mFailRetryCount			=	3;			/** 失败重试次数 */
 	
+	private Context mContext;
 	private Handler mHandler;
 	private BaseHttpRequest mBaseHttpRequest;
 	private BusinessRequestListener mBusinessRequestListener;
@@ -39,7 +42,9 @@ public class BusinessRequest implements Runnable{
 	/**
 	 * 
 	 */
-	public BusinessRequest(){
+	public BusinessRequest(Context context){
+		
+		mContext = context;
 		
 		mHandler = new Handler(){
 			
@@ -121,7 +126,7 @@ public class BusinessRequest implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 
-		mBaseHttpRequest = new BaseHttpRequest();
+		mBaseHttpRequest = new BaseHttpRequest(mContext);
 		mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
 		mBaseHttpRequest.setReadTimeout(mReadTimeout);
 		

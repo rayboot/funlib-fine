@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
-
 import com.funlib.log.FLog;
+import com.funlib.network.NetWork;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 
@@ -36,14 +39,17 @@ public class UpdateDownloader implements Runnable {
 	private Handler mHandler;
 	private int mDownloadPercent;
 	private int mPreDownloadPercent;
-	
+
+	private Context mContext;
 	private HttpURLConnection mHttpURLConnection;
 	private InputStream mDownloadInputStream = null;
 	
 	private Object mUpdateTag;
 
-	public UpdateDownloader() {
+	public UpdateDownloader(Context context) {
 
+		mContext = context;
+		
 		mHandler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
@@ -177,7 +183,12 @@ public class UpdateDownloader implements Runnable {
         			canceled();
         			bCanceled = false;
         			url = new URL(mUrl);
-        			mHttpURLConnection = (HttpURLConnection) url.openConnection();
+        			if(NetWork.isDefaultWap(mContext)){
+                    	Proxy proxy = new Proxy(java.net.Proxy.Type.HTTP,new InetSocketAddress(NetWork.getDefaultWapProxy(), NetWork.getDefaultWapPort()));
+                    	mHttpURLConnection = (HttpURLConnection) url.openConnection(proxy);
+                    }else{
+                    	mHttpURLConnection = (HttpURLConnection) url.openConnection();
+                    }
         			mHttpURLConnection.setConnectTimeout(mConnectionTimeout);
         			mHttpURLConnection.setReadTimeout(mReadTimeout);
         			if(readTotalCnt > 0 && fileSize > 0)
