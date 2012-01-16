@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 /**
@@ -28,9 +29,9 @@ public class NetWork {
 	public static final String CMWAP_PROXY_ENDS = "172";	//移动代理端口10.0.0.172
 	public static final String CUWAP_PROXY_ENDS = "172";	//联通代理端口10.0.0.172
 	
-	private static final String GSM_DATA_TYPE = "gsm";
-	private static final String CDMA_DATA_TYPE = "cdma";
-	private static final String TD_SCDMA_DATA_TYPE = "td-scdma";
+	private static final int GSM_DATA_TYPE = 0;
+	private static final int CDMA_DATA_TYPE = 1;
+	private static final int TD_SCDMA_DATA_TYPE = 2;
 	
 	public static Uri PREFERRED_APN_URI = Uri.parse("content://telephony/carriers/preferapn");
 	public static Uri GSM_PREFERRED_APN_URI = Uri.parse("content://telephony/carriers/preferapn2");
@@ -101,18 +102,29 @@ public class NetWork {
 	 * @param context
 	 * @return
 	 */
-	public static String getDefaultDataNetwork(Context context){
+	public static int getDefaultDataNetwork(Context context){
 		
-	    String str = Settings.System.getString(context.getContentResolver(), "default_data_network");
-	    if ("none".equals(str))
-	      str = Settings.System.getString(context.getContentResolver(), "saved_data_network");
-	    
-	    if(str == null){
-	    	
-	    }else if (!GSM_DATA_TYPE.equals(str))
-	      str = CDMA_DATA_TYPE;
-	    
-	    return str;
+//	    String str = Settings.System.getString(context.getContentResolver(), "default_data_network");
+//	    if ("none".equals(str))
+//	      str = Settings.System.getString(context.getContentResolver(), "saved_data_network");
+//	    
+//	    if(str == null){
+//	    	
+//	    }else if (!GSM_DATA_TYPE.equals(str))
+//	      str = CDMA_DATA_TYPE;
+//	    
+//	    return str;
+		
+		int defaultNet = GSM_DATA_TYPE;
+		
+		TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+		int type = tm.getPhoneType();
+		if(type == TelephonyManager.PHONE_TYPE_CDMA)
+			defaultNet = CDMA_DATA_TYPE;
+		else
+			defaultNet = GSM_DATA_TYPE;
+		
+		return defaultNet;
 	  }
 	
 	/**
@@ -124,11 +136,13 @@ public class NetWork {
 	public static ApnNode getDefaultApnNode(Context context){
 
 		Uri tmpUri = GSM_PREFERRED_APN_URI;
-		String dataType = getDefaultDataNetwork(context);
-		if(dataType == null){
+		int dataType = getDefaultDataNetwork(context);
+		if(dataType == GSM_DATA_TYPE){
 			tmpUri = PREFERRED_APN_URI;
-		}else if(!dataType.equals(GSM_DATA_TYPE)){
+		}else if(dataType == CDMA_DATA_TYPE){
 			tmpUri = CDMA_PREFERRED_APN_URI;
+		}else{
+			tmpUri = GSM_PREFERRED_APN_URI;
 		}
 		
 		sDefaultApnNode = new NetWork(). new ApnNode();
