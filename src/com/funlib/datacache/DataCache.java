@@ -27,7 +27,10 @@ import org.apache.http.util.EntityUtils;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
+
 import com.funlib.basehttprequest.BaseHttpRequest;
+import com.funlib.log.FLog;
 
 public class DataCache implements Runnable{
 
@@ -48,11 +51,14 @@ public class DataCache implements Runnable{
 	private int mNowRetryCount;
 	private boolean bCanceled;
 	
+	private boolean bForceFromNet;	/** 强制从网络获取新数据 */
+	
 	/**
 	 * 
 	 */
 	public DataCache(){
 		
+		bForceFromNet = false;
 		mHandler = new Handler(){
 			
 			@Override
@@ -141,6 +147,15 @@ public class DataCache implements Runnable{
 	}
 	
 	/**
+	 * 强制从网络获取数据
+	 * @param force
+	 */
+	public void setForceFromNet(boolean force){
+		
+		this.bForceFromNet = force;
+	}
+	
+	/**
 	 * 在本地缓存文件中查找
 	 * @param dataUrl
 	 * @return
@@ -211,13 +226,19 @@ public class DataCache implements Runnable{
 	 */
 	private boolean checkNeedUpdate(DataCacheModel dcm){
 		
-		long currentDate = new Date().getTime();
-		long differ =  (currentDate - dcm.saveTime)/1000;
+		BaseHttpRequest brBaseHttpRequest = new BaseHttpRequest(mContext);
+		HttpResponse response = brBaseHttpRequest.request(mRequestUrl, mRequestParams);
+		if(response != null){
+			
+			String newHeader = parserCacheHeader(response);
+			if(TextUtils.isEmpty(newHeader) == false){
+				
+				if(dcm.cacheHeader.equals(newHeader) == false)
+					return true;
+			}
+		}
 		
-		if (dcm.maxAvaiableTime > differ)
-			return false;
-
-		return true;
+		return false;
 	}
 	
 	/**
@@ -264,21 +285,40 @@ public class DataCache implements Runnable{
 		return 0;
 	}
 
+	/**
+	 * 解析处cache-header字段
+	 * @param response
+	 * @return
+	 */
+	private String parserCacheHeader(HttpResponse response){
+		
+		String header = "";
+		Header cacheHeader = response.getFirstHeader("cache-header");
+		if(cacheHeader != null)
+			header = cacheHeader.getValue();
+		
+		return header;
+	}
+
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
 		
-		DataCacheModel ret = lookupInFiles(mRequestUrl);
-		if(ret != null){
+		DataCacheModel ret = null;
+		if(bForceFromNet == false){
 			
-			if(checkNeedUpdate(ret) == false){
+			ret = lookupInFiles(mRequestUrl);
+			if(ret != null){
 				
-				Message msg = Message.obtain();
-				msg.what = DataCacheError.SUCCESS;
-				msg.obj = ret.content;
-				mHandler.sendMessage(msg);
-				
-				return;
+				if(checkNeedUpdate(ret) == false){
+					
+					Message msg = Message.obtain();
+					msg.what = DataCacheError.SUCCESS;
+					msg.obj = ret.content;
+					mHandler.sendMessage(msg);
+					
+					return;
+				}
 			}
 		}
 		
@@ -291,9 +331,8 @@ public class DataCache implements Runnable{
 		HttpResponse response = null;
 		do {
 			
-			if(ret != null)
-				mBaseHttpRequest.setHeaderParam("Last-Modified", new Date(ret.lastModifiedTime).toGMTString());
-			
+//			if(ret != null)
+//				mBaseHttpRequest.setHeaderParam("Last-Modified", new Date(ret.lastModifiedTime).toGMTString());
 			response = mBaseHttpRequest.request(mRequestUrl, mRequestParams);
 			if(response != null){
 				break;
@@ -334,9 +373,10 @@ public class DataCache implements Runnable{
 						
 						ret = new DataCacheModel();
 						ret.content = (String)msg.obj;
-						ret.lastModifiedTime = parserLastModifiedTime(response);
-						ret.maxAvaiableTime = parserMaxAvailableTime(response);
-						ret.saveTime = new Date().getTime();
+//						ret.lastModifiedTime = parserLastModifiedTime(response);
+//						ret.maxAvaiableTime = parserMaxAvailableTime(response);
+//						ret.saveTime = new Date().getTime();
+						ret.cacheHeader = parserCacheHeader(response);
 						
 						storeDataCahe(ret, mRequestUrl);
 						
