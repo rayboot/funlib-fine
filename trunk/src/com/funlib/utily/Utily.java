@@ -62,30 +62,22 @@ public class Utily {
 	 * 
 	 * @return
 	 */
-	private static String uuidString = null;
 	public static String getDeviceUID() {
 
-		if(uuidString == null){
-			
-			uuidString = UUID.randomUUID().toString();
-		}
+//		if(uuidString == null){
+//			
+//			uuidString = UUID.randomUUID().toString();
+//		}
+//		
+//		return uuidString;
 		
-		return uuidString;
-		
-//		TelephonyManager tm = (TelephonyManager) CTMeetingApplication
-//				.getInstance().getSystemService(Context.TELEPHONY_SERVICE);
-//		return tm.getDeviceId();
-
 		// WifiManager wifi = (WifiManager) AMTCMVApplication.getInstance()
 		// .getSystemService(Context.WIFI_SERVICE);
 		// WifiInfo info = wifi.getConnectionInfo();
 		// return info.getMacAddress();
 
-		// TelephonyManager tm = (TelephonyManager)
-		// AMTCMVApplication.getInstance().
-		// getSystemService(Context.TELEPHONY_SERVICE);
-		//
-		// return tm.getDeviceId();
+		 TelephonyManager tm = (TelephonyManager)sContext.getSystemService(Context.TELEPHONY_SERVICE);
+		 return tm.getDeviceId();
 	}
 
 	/**
