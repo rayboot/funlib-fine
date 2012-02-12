@@ -12,6 +12,7 @@ public class BestTimer implements Runnable{
 	private Handler tickRequestHandler = new Handler();
 	private int TIME_INTERVAL = 0;
 	private BestTimerListener mBestTimerListener;
+	private boolean bCancel;
 	
 	@Override
 	public void run() {
@@ -19,7 +20,10 @@ public class BestTimer implements Runnable{
 		
 		if(mBestTimerListener != null)
 			mBestTimerListener.timerUp();
-		tickRequestHandler.postDelayed(this, TIME_INTERVAL);
+		if(bCancel == false){
+			if(tickRequestHandler != null)
+				tickRequestHandler.postDelayed(this, TIME_INTERVAL);
+		}
 	}
 	
 	/**
@@ -28,7 +32,9 @@ public class BestTimer implements Runnable{
 	 */
 	public void startTimer(int interval){
 		
+		bCancel = false;
 		TIME_INTERVAL = interval;
+		tickRequestHandler = new Handler();
 		tickRequestHandler.postDelayed(this,TIME_INTERVAL);
 	}
 	
@@ -37,7 +43,9 @@ public class BestTimer implements Runnable{
 	 */
 	public void cancelTimer(){
 		
+		bCancel = true;
 		tickRequestHandler.removeCallbacks(this);
+		tickRequestHandler = null;
 	}
 	
 	/**
