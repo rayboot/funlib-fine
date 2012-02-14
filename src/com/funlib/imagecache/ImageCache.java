@@ -18,6 +18,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.view.View;
 import com.funlib.basehttprequest.BaseHttpRequest;
 
@@ -54,6 +55,11 @@ public class ImageCache implements Runnable{
 	 * @return
 	 */
 	private static String hashString(String imgUrl){
+		
+		if(TextUtils.isEmpty(imgUrl) == true){
+			
+			imgUrl = String.valueOf(System.currentTimeMillis());
+		}
 		
 		return FILE_PREFIX + String.valueOf(imgUrl.hashCode());
 	}

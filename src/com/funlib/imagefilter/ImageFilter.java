@@ -1,4 +1,4 @@
-package com.image.filter;
+package com.funlib.imagefilter;
 
 import android.R.integer;
 import android.graphics.Bitmap;

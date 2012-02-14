@@ -1,4 +1,4 @@
-package com.image.filter;
+package com.funlib.imagefilter;
 
 import java.io.ByteArrayOutputStream;
 
