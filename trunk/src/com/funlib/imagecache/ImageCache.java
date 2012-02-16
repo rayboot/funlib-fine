@@ -247,10 +247,16 @@ public class ImageCache implements Runnable{
 		try {
 			
 			FileInputStream file = mContext.openFileInput(hashString);
-			return BitmapFactory.decodeStream(file);
+			Bitmap bmp = BitmapFactory.decodeStream(file);
+			return bmp;
+		} catch (OutOfMemoryError e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch (Exception e) {
+			// TODO: handle exception
 		}
 		
 		return null;
@@ -306,9 +312,14 @@ public class ImageCache implements Runnable{
 				byte[] bmpBytes = featchBitmap(imgUrl);
 				if(bmpBytes != null){
 					
-					bmp = BitmapFactory.decodeByteArray(bmpBytes, 0, bmpBytes.length);
-					//存储图片
-					storeCachedBitmap(imgUrl , bmp , bmpBytes);
+					try {
+						
+						bmp = BitmapFactory.decodeByteArray(bmpBytes, 0, bmpBytes.length);
+						//存储图片
+						storeCachedBitmap(imgUrl , bmp , bmpBytes);
+					} catch (OutOfMemoryError e) {
+						// TODO: handle exception
+					}
 				}
 			}
 		}
