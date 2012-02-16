@@ -235,10 +235,12 @@ public class DataCache implements Runnable{
 				
 				if(dcm.cacheHeader.equals(newHeader) == false)
 					return true;
+				else
+					return false;
 			}
 		}
 		
-		return false;
+		return true;
 	}
 	
 	/**
