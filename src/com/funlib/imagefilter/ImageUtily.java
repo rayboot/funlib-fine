@@ -26,6 +26,77 @@ import android.graphics.drawable.LayerDrawable;
 import android.util.Log;
 
 public class ImageUtily {
+	
+	/**
+	 * 添加蒙版效果
+	 * @param bitmap
+	 * @param mask
+	 * @return
+	 */
+	public static Bitmap addCoverFrame(Bitmap bitmap , Bitmap mask , int maskAlpha){
+		
+		try {
+			Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
+					bitmap.getHeight(), Config.ARGB_8888);
+			Canvas canvas = new Canvas(output);
+			final Paint paint = new Paint();
+			paint.setAntiAlias(true);
+			canvas.drawARGB(0, 0, 0, 0);
+			paint.setColor(Color.WHITE);
+			paint.setXfermode(null);
+			paint.setAlpha(255);
+			canvas.drawBitmap(bitmap, 0, 0, paint);
+			paint.setXfermode(new PorterDuffXfermode(Mode.SCREEN));
+			paint.setAlpha(maskAlpha);
+			canvas.drawBitmap(mask, 0, 0, paint);
+			return output;
+		} catch (Exception e) {
+			return bitmap;
+		}
+	}
+	
+	/**
+	 * 修改图片亮度
+	 * @param bmp
+	 * @param degress 亮度[-255, 255]
+	 * @return
+	 */
+	public static Bitmap changeBrightness(Bitmap bmp , int brightness){
+		
+		Bitmap bitmap = Bitmap.createBitmap(bmp.getWidth(), bmp.getHeight(),  Config.ARGB_8888);  
+        ColorMatrix cMatrix = new ColorMatrix();  
+        cMatrix.set(new float[] { 1, 0, 0, 0, brightness, 0, 1,  
+                0, 0, brightness,// 改变亮度  
+                0, 0, 1, 0, brightness, 0, 0, 0, 1, 0 });  
+
+        Paint paint = new Paint();  
+        paint.setColorFilter(new ColorMatrixColorFilter(cMatrix));  
+        Canvas canvas = new Canvas(bitmap);  
+        canvas.drawBitmap(bmp, 0, 0, paint);  
+        
+        return bitmap;
+	}
+	
+	/**
+	 * 修改对比度
+	 * @param bmp
+	 * @param contrast [0-1]
+	 * @return
+	 */
+	public static Bitmap changeContrast(Bitmap bmp, float contrast){
+		
+		Bitmap bitmap = Bitmap.createBitmap(bmp.getWidth(), bmp.getHeight(),  Config.ARGB_8888);
+        ColorMatrix cMatrix = new ColorMatrix();  
+        cMatrix.set(new float[] { contrast, 0, 0, 0, 0, 0,  
+        		contrast, 0, 0, 0,// 改变对比度  
+                0, 0, contrast, 0, 0, 0, 0, 0, 1, 0 });  
+
+        Paint paint = new Paint();  
+        paint.setColorFilter(new ColorMatrixColorFilter(cMatrix));  
+        Canvas canvas = new Canvas(bitmap);  
+        canvas.drawBitmap(bmp, 0, 0, paint);
+        return bitmap;
+	}
 
 	/**
 	 * 生成圆角图片

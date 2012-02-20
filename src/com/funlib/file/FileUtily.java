@@ -88,4 +88,25 @@ public class FileUtily {
 		return false;
 	}
 
+	/**
+	 * 创建临时文件
+	 * @param fielPath
+	 * @return
+	 */
+	public static File getTempFile(String fielPath){
+		
+		File file = null;
+		try{
+			
+			file = new File(fielPath);
+			if(file.exists()){
+				file.delete();
+			}
+			file.createNewFile();
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		return file;
+	}
 }
