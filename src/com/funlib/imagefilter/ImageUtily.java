@@ -28,31 +28,111 @@ import android.util.Log;
 public class ImageUtily {
 	
 	/**
-	 * 添加蒙版效果
-	 * @param bitmap
+	 * 模仿ps 柔光效果
+	 * @param src
 	 * @param mask
+	 * @param maskAlpha
 	 * @return
 	 */
-	public static Bitmap addCoverFrame(Bitmap bitmap , Bitmap mask , int maskAlpha){
+	public static Bitmap ps_softLight(Bitmap src , Bitmap mask , float maskAlpha){
 		
-		try {
-			Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-					bitmap.getHeight(), Config.ARGB_8888);
-			Canvas canvas = new Canvas(output);
-			final Paint paint = new Paint();
-			paint.setAntiAlias(true);
-			canvas.drawARGB(0, 0, 0, 0);
-			paint.setColor(Color.WHITE);
-			paint.setXfermode(null);
-			paint.setAlpha(255);
-			canvas.drawBitmap(bitmap, 0, 0, paint);
-			paint.setXfermode(new PorterDuffXfermode(Mode.SCREEN));
-			paint.setAlpha(maskAlpha);
-			canvas.drawBitmap(mask, 0, 0, paint);
-			return output;
-		} catch (Exception e) {
-			return bitmap;
+		int width = src.getWidth();
+		int height = src.getHeight();
+		Bitmap bitmap = Bitmap.createBitmap(width, height,Bitmap.Config.ARGB_8888);
+		int pixColorSrc = 0;
+		int pixColorMask = 0;
+		int RSrc = 0;
+		int GSrc = 0;
+		int BSrc = 0;
+		int RMask = 0;
+		int GMask = 0;
+		int BMask = 0;
+		int index = 0;
+		int[] pixelsSrc = new int[width * height];
+		int[] pixelsMask = new int[width * height];
+		src.getPixels(pixelsSrc, 0, width, 0, 0, width, height);
+		mask.getPixels(pixelsMask, 0, width, 0, 0, width, height);
+		for (int i = 0; i < height; i++) {
+			for (int k = 0; k < width; k++) {
+				
+				index = width*i + k; 
+				pixColorSrc = pixelsSrc[index];
+				pixColorMask = pixelsMask[index];
+				RSrc = Color.red(pixColorSrc);
+				GSrc = Color.green(pixColorSrc);
+				BSrc = Color.blue(pixColorSrc);
+				RMask = Color.red(pixColorMask);
+				GMask = Color.green(pixColorMask);
+				BMask = Color.blue(pixColorMask);
+				
+				RSrc = ps_softLightFun(RSrc, RMask , maskAlpha);
+				GSrc = ps_softLightFun(GSrc, GMask , maskAlpha);
+				BSrc = ps_softLightFun(BSrc, BMask , maskAlpha);
+				pixelsSrc[index] = Color.argb(255, RSrc, GSrc, BSrc);
+			}
 		}
+
+		bitmap.setPixels(pixelsSrc, 0, width, 0, 0, width, height);
+		return bitmap;
+	}
+	private static int ps_softLightFun(int src , int mask , float maskAlpha){
+		
+		int value = (int) (((src < 128)?(2*((mask>>1)+64))*((float)src/255):(255-(2*(255-((mask>>1)+64))*(float)(255-src)/255))));
+		return (int) ((1-maskAlpha)*src + maskAlpha*value);
+	}
+	
+	/**
+	 * 模仿ps 排除效果
+	 * @param src
+	 * @param mask
+	 * @param maskAlpha
+	 * @return
+	 */
+	public static Bitmap ps_exclusion(Bitmap src , Bitmap mask , float maskAlpha){
+		
+		int width = src.getWidth();
+		int height = src.getHeight();
+		Bitmap bitmap = Bitmap.createBitmap(width, height,Bitmap.Config.ARGB_8888);
+		int pixColorSrc = 0;
+		int pixColorMask = 0;
+		int RSrc = 0;
+		int GSrc = 0;
+		int BSrc = 0;
+		int RMask = 0;
+		int GMask = 0;
+		int BMask = 0;
+		int index = 0;
+		int[] pixelsSrc = new int[width * height];
+		int[] pixelsMask = new int[width * height];
+		src.getPixels(pixelsSrc, 0, width, 0, 0, width, height);
+		mask.getPixels(pixelsMask, 0, width, 0, 0, width, height);
+		for (int i = 0; i < height; i++) {
+			for (int k = 0; k < width; k++) {
+				
+				index = width*i + k; 
+				pixColorSrc = pixelsSrc[index];
+				pixColorMask = pixelsMask[index];
+				RSrc = Color.red(pixColorSrc);
+				GSrc = Color.green(pixColorSrc);
+				BSrc = Color.blue(pixColorSrc);
+				RMask = Color.red(pixColorMask);
+				GMask = Color.green(pixColorMask);
+				BMask = Color.blue(pixColorMask);
+				
+				RSrc = ps_exclusionFun(RSrc, RMask , maskAlpha);
+				GSrc = ps_exclusionFun(GSrc, GMask , maskAlpha);
+				BSrc = ps_exclusionFun(BSrc, BMask , maskAlpha);
+				pixelsSrc[index] = Color.argb(255, RSrc, GSrc, BSrc);
+			}
+		}
+
+		bitmap.setPixels(pixelsSrc, 0, width, 0, 0, width, height);
+		return bitmap;
+	}
+	private static int ps_exclusionFun(int src , int mask , float maskAlpha){
+		
+		int value = (int) ((src + mask - 2 * src * mask / 255));
+		return (int) ((1-maskAlpha)*src + maskAlpha*value);
 	}
 	
 	/**
@@ -260,93 +340,6 @@ public class ImageUtily {
 		return null;
 	}
 
-	/**
-	 * 组合两张图片，通过像素叠加 如果src图片尺寸小于mask，会对src按照mask比例缩放 src图片会先进行灰度处理
-	 * 
-	 * @param src
-	 * @param mask
-	 *            相框图片
-	 * @param srcGray
-	 *            是否对原图做灰度处理
-	 * @return
-	 */
-	public static Bitmap combinateBitmapByPixel(Bitmap src, Bitmap mask,
-			boolean srcGray) {
-
-		int src_w = src.getWidth();
-		int src_h = src.getHeight();
-		int mask_w = mask.getWidth();
-		int mask_h = mask.getHeight();
-		if (mask_w > src_w || mask_h > src_h) {
-
-			src = Bitmap.createScaledBitmap(src, mask_w, mask_h, false);
-		}
-		Bitmap bmpGrayscale = null;
-		if (srcGray) {
-			bmpGrayscale = Bitmap.createBitmap(mask_w, mask_h,
-					Bitmap.Config.RGB_565);
-			Canvas c = new Canvas(bmpGrayscale);
-			Paint paint = new Paint();
-			ColorMatrix cm = new ColorMatrix();
-			cm.setSaturation(0);
-			ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
-			paint.setColorFilter(f);
-			paint.setAntiAlias(true);
-			c.drawBitmap(src, 0, 0, paint);
-			src = bmpGrayscale;
-		}
-
-		src_w = src.getWidth();
-		src_h = src.getHeight();
-
-		int[] srcPixels = new int[src_w * src_h];
-		int[] maskPixels = new int[src_w * src_h];
-		int[] dstPixels = new int[src_w * src_h];
-		src.getPixels(srcPixels, 0, src_w, 0, 0, src_w, src_h);
-		mask.getPixels(maskPixels, 0, src_w, 0, 0, src_w, src_h);
-
-		int srcPixColor = 0;
-		int srcPixR = 0;
-		int srcPixG = 0;
-		int srcPixB = 0;
-		int yOffset = 0;
-		int maskPixColor = 0;
-		int maskPixR = 0;
-		int maskPixG = 0;
-		int maskPixB = 0;
-		int dstPixColor = 0;
-		int dstPixR = 0;
-		int dstPixG = 0;
-		int dstPixB = 0;
-		for (int y = 0; y < src_h; y++) {
-			for (int x = 0; x < src_w; x++) {
-				yOffset = y * src_w + x;
-				srcPixColor = srcPixels[yOffset];
-				srcPixR = Color.red(srcPixColor);
-				srcPixG = Color.green(srcPixColor);
-				srcPixB = Color.blue(srcPixColor);
-
-				maskPixColor = maskPixels[yOffset];
-				maskPixR = Color.red(maskPixColor);
-				maskPixG = Color.green(maskPixColor);
-				maskPixB = Color.blue(maskPixColor);
-
-				double k = (double) 125 / 256.0;
-				double reverse_k = 1.0 - k;
-
-				dstPixR = (int) (srcPixR + maskPixR * k);
-				dstPixG = (int) (srcPixG + maskPixG * k);
-				dstPixB = (int) (srcPixB + maskPixB * k);
-
-				dstPixColor = Color.argb(255, dstPixR > 255 ? 255 : dstPixR,
-						dstPixG > 255 ? 255 : dstPixG, dstPixB > 255 ? 255
-								: dstPixB);
-				dstPixels[yOffset] = dstPixColor;
-			}
-		}
-
-		return Bitmap.createBitmap(dstPixels, src_w, src_h, Config.ARGB_8888);
-	}
 
 	/**
 	 * 给图片添加相框，mask要是png格式，中间部分支持透明 如果src图片尺寸小于mask，会对src按照mask比例缩放
