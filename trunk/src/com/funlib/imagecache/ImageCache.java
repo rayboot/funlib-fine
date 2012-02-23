@@ -1,9 +1,5 @@
 package com.funlib.imagecache;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +17,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.view.View;
 import com.funlib.basehttprequest.BaseHttpRequest;
+import com.funlib.file.FileUtily;
 
 /**
  * 图片缓存
@@ -37,8 +34,8 @@ public class ImageCache implements Runnable{
 
 	private final static String FILE_PREFIX = "image-format";		/** 图片文件名前缀 */
 	
-	private int mReadTimeout 			= 	5000;		/** 读取超时时间默认值 */
-	private int mConnectionTimeout 		= 	5000;		/** 连接超时时间默认值 */
+	private int mReadTimeout 			= 	3000;		/** 读取超时时间默认值 */
+	private int mConnectionTimeout 		= 	3000;		/** 连接超时时间默认值 */
 	
 	private Context mContext;
 	private Handler mHandler;
@@ -106,18 +103,6 @@ public class ImageCache implements Runnable{
 			sBitampPools.clear();
 		}
 		
-		String[] files = context.fileList();
-		if(files != null && files.length > 0){
-			
-			int size = files.length;
-			for(int i = 0 ; i < size ; ++i){
-
-				final String fileName = files[i];
-				if(fileName.startsWith(FILE_PREFIX)){
-					context.deleteFile(fileName);
-				}
-			}
-		}
 	}
 	
 	/**
@@ -155,7 +140,7 @@ public class ImageCache implements Runnable{
 	}
 	
 	/**
-	 * 设置读操作超时时间，默认5s
+	 * 设置读操作超时时间，默认3s
 	 * @param timeout
 	 */
 	public void setReadTimeout(int timeout){
@@ -164,7 +149,7 @@ public class ImageCache implements Runnable{
 	}
 	
 	/**
-	 * 设置链接操作超时时间，默认5s
+	 * 设置链接操作超时时间，默认3s
 	 * @param timeout
 	 */
 	public void setConnectionTimeout(int timeout){
@@ -213,19 +198,8 @@ public class ImageCache implements Runnable{
 		addBitmap(imgUrl, bitmap);
 		
 		//缓存到文件
-		try {
-			
-			FileOutputStream fos = mContext.openFileOutput(hashString(imgUrl), Context.MODE_PRIVATE);
-			fos.write(bitmapBytes);
-			fos.close();
-			
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		FileUtily.saveBytes(FileUtily.getAppSDPath() + "/" + hashString(imgUrl), bitmapBytes);
+		
 	}
 	
 	/**
@@ -243,18 +217,13 @@ public class ImageCache implements Runnable{
 	 */
 	private Bitmap lookupInFiles(String imgUrl){
 		
-		final String hashString = hashString(imgUrl);
-		try {
+		try{
 			
-			FileInputStream file = mContext.openFileInput(hashString);
-			Bitmap bmp = BitmapFactory.decodeStream(file);
-			return bmp;
-		} catch (OutOfMemoryError e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String filePath = FileUtily.getAppSDPath() + "/" + hashString(imgUrl);
+			byte[] bytes = FileUtily.getBytes(filePath);
+			return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+		}catch(OutOfMemoryError e){
+			
 		}catch (Exception e) {
 			// TODO: handle exception
 		}

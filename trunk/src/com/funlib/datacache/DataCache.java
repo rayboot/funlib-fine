@@ -30,6 +30,7 @@ import android.os.Message;
 import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
+import com.funlib.file.FileUtily;
 import com.funlib.log.FLog;
 
 public class DataCache implements Runnable{
@@ -162,21 +163,7 @@ public class DataCache implements Runnable{
 	 */
 	private DataCacheModel lookupInFiles(String dataUrl){
 		
-		try {
-			FileInputStream fis = mContext.openFileInput(hashString(mRequestUrl));
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			
-			DataCacheModel dcm = new DataCacheModel();
-			dcm = (DataCacheModel) ois.readObject();
-			
-			return dcm;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		return null;
+		return (DataCacheModel) FileUtily.getObject(FileUtily.getAppSDPath() + "/" + hashString(dataUrl));
 	}
 	
 	/**
@@ -186,18 +173,7 @@ public class DataCache implements Runnable{
 	 */
 	private void storeDataCahe(DataCacheModel model , String dataUrl){
 		
-		try {
-			FileOutputStream fos = mContext.openFileOutput(hashString(mRequestUrl), Context.MODE_PRIVATE);
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(model);
-			oos.flush();
-			oos.close();
-			fos.close();
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		FileUtily.saveObject(FileUtily.getAppSDPath() + "/" + hashString(mRequestUrl), model);
 	}
 	
 	/**
@@ -205,18 +181,6 @@ public class DataCache implements Runnable{
 	 */
 	public static void clearCache(Context context){
 
-		String[] files = context.fileList();
-		if(files != null && files.length > 0){
-			
-			int size = files.length;
-			for(int i = 0 ; i < size ; ++i){
-
-				final String fileName = files[i];
-				if(fileName.startsWith(FILE_PREFIX)){
-					context.deleteFile(fileName);
-				}
-			}
-		}
 	}
 	
 	/**
@@ -305,6 +269,13 @@ public class DataCache implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		
+		
+		
+		bForceFromNet = true;//fix me for debug
+		
+		
+		
 		
 		DataCacheModel ret = null;
 		if(bForceFromNet == false){
