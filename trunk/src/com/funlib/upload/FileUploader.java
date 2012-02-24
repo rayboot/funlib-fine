@@ -9,11 +9,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
-
-import com.funlib.log.FLog;
 import com.funlib.network.NetWork;
-
-import android.R.integer;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -175,6 +171,7 @@ public class FileUploader implements Runnable {
 
 		int responseCode = mHttpConn.getResponseCode();
 		String responseString = b.toString();
+		
 		if(responseCode != 200)
 			responseString = null;
 		
