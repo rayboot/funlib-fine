@@ -62,7 +62,7 @@ public class Utily {
 	 * 
 	 * @return
 	 */
-	public static String getDeviceUID() {
+	public static String getDeviceImei() {
 
 //		if(uuidString == null){
 //			
