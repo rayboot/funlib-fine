@@ -9,8 +9,9 @@ public interface UploadListener {
 	
 	/**
 	 * 
-	 * @param resultCode 见UploadResult
-	 * @param obj 服务器返回值
+	 * @param statusCode
+	 * @param percent
+	 * @param obj
 	 */
-	public void onUploadFinish(int resultCode, Object obj);
+	public void onUploadStatusChanged(int statusCode , int percent , Object obj);
 }
