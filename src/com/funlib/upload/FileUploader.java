@@ -10,8 +10,10 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 
+import com.funlib.log.FLog;
 import com.funlib.network.NetWork;
 
+import android.R.integer;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -66,7 +68,7 @@ public class FileUploader implements Runnable {
 
 			if(mUploadlistener != null){
 				
-				mUploadlistener.onUploadFinish(msg.arg1, msg.obj);
+				mUploadlistener.onUploadStatusChanged(msg.arg1, msg.arg2 , msg.obj);
 			}
 		}
 	};
@@ -74,28 +76,37 @@ public class FileUploader implements Runnable {
 	@Override
 	public void run() {
 
-		Message msg = Message.obtain();
 		try {
 
 			String responseString = doPost(mFileInputStream, this.mServerUrl);
-			msg.obj = responseString;
-			if(msg.obj == null)
-				msg.arg1 = UploadResult.FAIL;
-			else
-				msg.arg1 = UploadResult.SUCCESS;
+			if(responseString == null){
+				sendMessage(UploadStatus.FAIL , 0 , null);
+			}else{
+				sendMessage(UploadStatus.SUCCESS , 100 , responseString);
+			}
 			
 		} catch (Exception e) {
 			
-			msg.arg1 = UploadResult.FAIL;
-			msg.obj = null;
+			sendMessage(UploadStatus.FAIL , 0 , null);
 		}
 		
-		mHandler.sendMessage(msg);
 	}
 
+	private void sendMessage(int status , int percent , Object obj){
+		
+		Message msg = Message.obtain();
+		msg = Message.obtain();
+		msg.arg1 = status;
+		msg.arg2 = percent;
+		msg.obj = obj;
+		mHandler.sendMessage(msg);
+	}
+	
 	private String doPost(InputStream fStream, String serverUrl)
 			throws IOException {
 
+		sendMessage(UploadStatus.STARTUPLOADING , 0 , null);
+		
 		String end = "\r\n";
 		String twoHyphens = "--";
 		String boundary = "*****";
@@ -139,9 +150,14 @@ public class FileUploader implements Runnable {
 		/* 从文件读取数据到缓冲区 */
 		
 		DataInputStream dis = new DataInputStream(fStream);
+		int totalLength = dis.available();
+		int tmpTotalLength = 0;
 		while ((length = dis.read(buffer)) != -1) {
 			/* 将数据写入DataOutputStream中 */
 			ds.write(buffer, 0, length);
+			
+			tmpTotalLength += length;
+			sendMessage(UploadStatus.UPLOADING , tmpTotalLength/totalLength*100 , null);
 		}
 		ds.writeBytes(end);
 		ds.writeBytes(twoHyphens + boundary + twoHyphens + end);

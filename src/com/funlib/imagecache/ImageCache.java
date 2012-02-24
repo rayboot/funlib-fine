@@ -18,6 +18,7 @@ import android.text.TextUtils;
 import android.view.View;
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
+import com.funlib.log.FLog;
 
 /**
  * 图片缓存
@@ -237,7 +238,7 @@ public class ImageCache implements Runnable{
 	 * @return
 	 */
 	private byte[] featchBitmap(String imgUrl){
-		
+
 		mBaseHttpRequest = new BaseHttpRequest(mContext);
 		mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
 		mBaseHttpRequest.setReadTimeout(mReadTimeout);
@@ -252,10 +253,10 @@ public class ImageCache implements Runnable{
 				return EntityUtils.toByteArray(response.getEntity());
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			}
 		}
-		
 		return null;
 	}
 
