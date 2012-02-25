@@ -16,6 +16,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
 import com.funlib.log.FLog;
@@ -121,11 +124,29 @@ public class ImageCache implements Runnable{
 
 					if (mTarget != null && msg.obj != null) {
 						
-						if(mTarget instanceof View){
+//						if(mTarget instanceof View){
+//							
+//							Bitmap bmp = (Bitmap)msg.obj;
+//							Drawable drawable = new BitmapDrawable(bmp);
+//							
+//							View view = (View)mTarget;
+//							view.setBackgroundDrawable(drawable);
+//						}
+						if(mTarget instanceof ImageView){
+							
+							Bitmap bmp = (Bitmap)msg.obj;
+							ImageView iv = (ImageView)mTarget;
+							iv.setImageBitmap(bmp);
+						}else if(mTarget instanceof ImageButton){
+							
+							Bitmap bmp = (Bitmap)msg.obj;
+							ImageButton iv = (ImageButton)mTarget;
+							iv.setImageBitmap(bmp);
+						}else if(mTarget instanceof View){
 							
 							Bitmap bmp = (Bitmap)msg.obj;
 							Drawable drawable = new BitmapDrawable(bmp);
-							
+//							
 							View view = (View)mTarget;
 							view.setBackgroundDrawable(drawable);
 						}
