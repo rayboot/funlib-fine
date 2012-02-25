@@ -80,6 +80,9 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
+			if(file.exists() == false)
+				file.mkdirs();
+			
 			FileOutputStream outStream = new FileOutputStream(file);
 			outStream.write(data);
 			outStream.close();
@@ -131,6 +134,8 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
+			if(file.exists() == false)
+				file.mkdirs();
 			FileOutputStream outStream = new FileOutputStream(file);
 			ObjectOutputStream oos = new ObjectOutputStream(outStream);
 			oos.writeObject(object);
