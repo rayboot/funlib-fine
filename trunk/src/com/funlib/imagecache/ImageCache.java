@@ -21,7 +21,6 @@ import android.widget.ImageView;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
-import com.funlib.log.FLog;
 
 /**
  * 图片缓存

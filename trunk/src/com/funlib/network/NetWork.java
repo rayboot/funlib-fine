@@ -1,7 +1,6 @@
 package com.funlib.network;
 
 
-import android.R.integer;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
@@ -9,9 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
-import android.provider.Settings;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 /**
  * 网络设置

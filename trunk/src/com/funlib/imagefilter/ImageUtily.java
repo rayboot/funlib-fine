@@ -1,9 +1,6 @@
 package com.funlib.imagefilter;
 
 import java.io.ByteArrayOutputStream;
-import java.util.HashMap;
-
-import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
@@ -23,7 +20,6 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.util.Log;
 
 public class ImageUtily {
 	

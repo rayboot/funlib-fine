@@ -1,20 +1,5 @@
 package com.funlib.datacache;
 
-/**
- * 支持缓存数据到本地
- * 
- * 缓存策略：
- * 存储cache保存时间和最长有效时间，同时存储上次修改时间
- * 如果超过了最长有效时间，把上次修改时间返回给服务器，如果服务器返回304表明不需要更新
- * 
- * 
- * @author taojianli
- *
- */
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Date;
 import java.util.List;
 
@@ -31,7 +16,6 @@ import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
-import com.funlib.log.FLog;
 
 public class DataCache implements Runnable{
 
