@@ -1,10 +1,8 @@
 package com.funlib.utily;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -22,9 +20,7 @@ import android.view.inputmethod.InputMethodManager;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 用法：

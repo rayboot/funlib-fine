@@ -2,8 +2,6 @@ package com.funlib.datacache;
 
 import java.io.Serializable;
 
-import com.j256.ormlite.field.DatabaseField;
-
 public class DataCacheModel implements Serializable{
 
     /**
@@ -16,7 +14,4 @@ public class DataCacheModel implements Serializable{
 //    public long maxAvaiableTime;            /** cache有效时间 */
 //    public long saveTime;                   /** 保存cache时间 */
     public String cacheHeader;
-    
-    @DatabaseField(generatedId = true)
-	int id;
 }

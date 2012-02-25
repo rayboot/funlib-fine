@@ -2,16 +2,9 @@ package com.funlib.file;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-
-import com.funlib.datacache.DataCacheModel;
-
-import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.os.Environment;
 import android.text.TextUtils;
 
