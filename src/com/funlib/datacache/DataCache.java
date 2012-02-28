@@ -19,8 +19,6 @@ import com.funlib.file.FileUtily;
 
 public class DataCache implements Runnable{
 
-	private final static String FILE_PREFIX = "data-format";/** 数据文件名前缀 */
-	
 	private int mReadTimeout 			= 	3000;		/** 读取超时时间默认值 */
 	private int mConnectionTimeout 		= 	3000;		/** 连接超时时间默认值 */
 	private int mFailRetryCount			=	3;			/** 失败重试次数 */
@@ -64,7 +62,7 @@ public class DataCache implements Runnable{
 	 */
 	private static String hashString(String dataUrl){
 		
-		return FILE_PREFIX + String.valueOf(dataUrl.hashCode());
+		return String.valueOf(dataUrl.hashCode()) + ".txt";
 	}
 	
 	/**
@@ -253,13 +251,6 @@ public class DataCache implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		
-		
-		
-		bForceFromNet = true;//fix me for debug
-		
-		
-		
 		
 		DataCacheModel ret = null;
 		if(bForceFromNet == false){
