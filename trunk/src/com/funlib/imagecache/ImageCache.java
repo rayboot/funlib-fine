@@ -35,7 +35,6 @@ import com.funlib.file.FileUtily;
  */
 public class ImageCache implements Runnable{
 
-	private final static String FILE_PREFIX = "image-format";		/** 图片文件名前缀 */
 	
 	private int mReadTimeout 			= 	3000;		/** 读取超时时间默认值 */
 	private int mConnectionTimeout 		= 	3000;		/** 连接超时时间默认值 */
@@ -61,7 +60,7 @@ public class ImageCache implements Runnable{
 			imgUrl = String.valueOf(System.currentTimeMillis());
 		}
 		
-		return FILE_PREFIX + String.valueOf(imgUrl.hashCode());
+		return String.valueOf(imgUrl.hashCode()) + ".jpg";
 	}
 	
 	/**
