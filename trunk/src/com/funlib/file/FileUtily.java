@@ -3,8 +3,13 @@ package com.funlib.file;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import com.funlib.log.FLog;
+
+import android.content.Context;
 import android.os.Environment;
 import android.text.TextUtils;
 
@@ -73,9 +78,29 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
-			if(file.exists() == false)
-				file.mkdirs();
-			
+			FileOutputStream outStream = new FileOutputStream(file);
+			outStream.write(data);
+			outStream.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+
+			return false;
+		}
+
+		return false;
+	}
+	
+	/**
+	 * 如果sdcard没有mounted，返回false
+	 * 
+	 * @param os
+	 * @return
+	 */
+	public static boolean saveBytes(File file, byte[] data) {
+
+		try {
+
 			FileOutputStream outStream = new FileOutputStream(file);
 			outStream.write(data);
 			outStream.close();
@@ -127,8 +152,32 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
-			if(file.exists() == false)
-				file.mkdirs();
+			FileOutputStream outStream = new FileOutputStream(file);
+			ObjectOutputStream oos = new ObjectOutputStream(outStream);
+			oos.writeObject(object);
+			oos.flush();
+			oos.close();
+			outStream.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+
+			return false;
+		}
+
+		return false;
+	}
+	
+	/**
+	 * 如果sdcard没有mounted，返回false
+	 * 
+	 * @param os
+	 * @return
+	 */
+	public static boolean saveObject(File file, Object object) {
+
+		try {
+
 			FileOutputStream outStream = new FileOutputStream(file);
 			ObjectOutputStream oos = new ObjectOutputStream(outStream);
 			oos.writeObject(object);
@@ -177,20 +226,35 @@ public class FileUtily {
 	 * @param fielPath
 	 * @return
 	 */
-	public static File getTempFile(String fielPath){
+	public static File getTempFile(Context context){
 		
 		File file = null;
-		try{
+		try {
 			
-			file = new File(fielPath);
-			if(file.exists()){
-				file.delete();
-			}
-			file.createNewFile();
-		}catch (Exception e) {
-			// TODO: handle exception
+			file = File.createTempFile("tmp", null , context.getCacheDir());
+			file.deleteOnExit();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
 		}
 		
 		return file;
+	}
+	
+	/**
+	 * 创建文件夹
+	 * @param dirPath
+	 * @return
+	 */
+	public static boolean mkDir(String dirPath){
+		
+		File file = new File(dirPath);
+		if(file.exists() == false){
+			
+			return file.mkdirs();
+		}
+		
+		return true;
 	}
 }
