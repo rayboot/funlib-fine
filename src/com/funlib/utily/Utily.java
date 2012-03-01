@@ -77,6 +77,16 @@ public class Utily {
 	}
 
 	/**
+	 * 
+	 * @return
+	 */
+	public static String getDeviceIMSI(){
+		
+		TelephonyManager tm = (TelephonyManager)sContext.getSystemService(Context.TELEPHONY_SERVICE);
+		return tm.getSubscriberId();
+	}
+	
+	/**
 	 * 设置view状态，可以不用添加xml文件
 	 * 
 	 * @param normal

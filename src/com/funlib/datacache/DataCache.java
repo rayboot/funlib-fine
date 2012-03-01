@@ -2,11 +2,13 @@ package com.funlib.datacache;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
@@ -16,6 +18,7 @@ import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
+import com.funlib.utily.Utily;
 
 public class DataCache implements Runnable{
 
@@ -107,6 +110,9 @@ public class DataCache implements Runnable{
 		this.mRequestParams = params;
 		this.mRequestUrl = requestUrl;
 		this.mListenerID = listenerId;
+		if(this.mRequestParams == null)
+			this.mRequestParams = new Vector<NameValuePair>();
+		mRequestParams.add(new BasicNameValuePair("IMSIID", Utily.getDeviceIMSI()));
 		
 		new Thread(this).start();
 	}
@@ -251,6 +257,8 @@ public class DataCache implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		
+		bForceFromNet = true;//fixme 强制从net
 		
 		DataCacheModel ret = null;
 		if(bForceFromNet == false){
