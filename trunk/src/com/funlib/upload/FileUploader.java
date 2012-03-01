@@ -9,6 +9,8 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+
+import com.funlib.httputily.HttpUtily;
 import com.funlib.network.NetWork;
 import android.content.Context;
 import android.os.Handler;
@@ -25,6 +27,7 @@ public class FileUploader implements Runnable {
 	private InputStream mFileInputStream;
 	private UploadListener mUploadlistener;
 	private String mServerUrl;
+	private String mUploadFileName;
 	private HttpURLConnection mHttpConn;
 	
 	private Context mContext;
@@ -40,10 +43,11 @@ public class FileUploader implements Runnable {
 	 * @param serverUrl 目标服务器地址
 	 * @param is 待上传的文件流
 	 */
-	public void upLoadFile(String serverUrl, InputStream is) {
+	public void upLoadFile(String serverUrl, InputStream is , String fileName) {
 
 		this.mServerUrl = serverUrl;
 		this.mFileInputStream = is;
+		this.mUploadFileName = fileName;
 		new Thread(this).start();
 	}
 
@@ -75,15 +79,11 @@ public class FileUploader implements Runnable {
 		try {
 
 			String responseString = doPost(mFileInputStream, this.mServerUrl);
-			if(responseString == null){
-				sendMessage(UploadStatus.FAIL , 0 , null);
-			}else{
-				sendMessage(UploadStatus.SUCCESS , 100 , responseString);
-			}
+			sendMessage(UploadStatus.FINISH , 100 , responseString);
 			
 		} catch (Exception e) {
 			
-			sendMessage(UploadStatus.FAIL , 0 , null);
+			sendMessage(UploadStatus.FINISH , 0 , null);
 		}
 		
 	}
@@ -136,7 +136,7 @@ public class FileUploader implements Runnable {
 		DataOutputStream ds = new DataOutputStream(mHttpConn.getOutputStream());
 		ds.writeBytes(twoHyphens + boundary + end);
 		ds.writeBytes("Content-Disposition: form-data; "
-				+ "name=\"file\";filename=\"imgfile.png\"" + end);
+				+ "name=\"file\";filename=" + java.net.URLEncoder.encode(mUploadFileName, "utf-8") + end);
 		ds.writeBytes(end);
 		/* 设定每次写入1024bytes */
 		int bufferSize = 1024;
@@ -163,17 +163,7 @@ public class FileUploader implements Runnable {
 		ds.flush();
 		/* 取得Response内容 */
 		InputStream is = mHttpConn.getInputStream();
-		int ch;
-		StringBuffer b = new StringBuffer();
-		while ((ch = is.read()) != -1) {
-			b.append((char) ch);
-		}
-
-		int responseCode = mHttpConn.getResponseCode();
-		String responseString = b.toString();
-		
-		if(responseCode != 200)
-			responseString = null;
+		String responseString = HttpUtily.stream2string(is, "utf-8");
 		
 		/* 关闭DataOutputStream */
 		ds.close();
