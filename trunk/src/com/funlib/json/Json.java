@@ -8,6 +8,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.funlib.log.FLog;
+
 
 /**
  * Json解析类
@@ -170,26 +172,57 @@ public class Json {
 				} catch (Exception e) {
 					value = null;
 				}
+				
 				if (type.equals(int.class)) {
 					
-					f.setInt(ret,
-							value == null ? -1 : Integer.valueOf(value));
+					try {
+						
+						f.setInt(ret,
+								value == null ? 0 : Integer.valueOf(value));
+					} catch (Exception e) {
+						// TODO: handle exception
+						f.setInt(ret,0);
+					}
+					
 				} else if (type.equals(double.class)) {
 					
-					f.setDouble(ret,
-							value == null ? -1 : Double.valueOf(value));
+					try {
+						
+						f.setDouble(ret,
+								value == null ? 0 : Double.valueOf(value));
+					} catch (Exception e) {
+						// TODO: handle exception
+						f.setDouble(ret,0);
+					}
 				} else if(type.equals(Long.class)){
 					
-					f.setLong(ret,
-							value == null ? -1 : Long.valueOf(value));
+					try {
+						
+						f.setLong(ret,
+								value == null ? 0 : Long.valueOf(value));
+					} catch (Exception e) {
+						// TODO: handle exception
+						f.setLong(ret,0);
+					}
 				}else if (type.getClass().equals(java.util.List.class)) {
 
 				} else if(type.equals(Boolean.class)){
 					
-					f.setBoolean(ret,
-							value == null ? false : Boolean.valueOf(value));
+					try {
+						
+						f.setBoolean(ret,
+								value == null ? false : Boolean.valueOf(value));
+					} catch (Exception e) {
+						// TODO: handle exception
+						f.setBoolean(ret,false);
+					}
 				} else {
-					f.set(ret, value);
+					try {
+						
+						f.set(ret, value);
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
 				}
 			}
 			
