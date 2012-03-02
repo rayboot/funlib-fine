@@ -24,7 +24,7 @@ public class DataCache implements Runnable{
 
 	private int mReadTimeout 			= 	3000;		/** 读取超时时间默认值 */
 	private int mConnectionTimeout 		= 	3000;		/** 连接超时时间默认值 */
-	private int mFailRetryCount			=	3;			/** 失败重试次数 */
+	private int mFailRetryCount			=	2;			/** 失败重试次数 */
 	
 	private Context mContext;
 	private Handler mHandler;
