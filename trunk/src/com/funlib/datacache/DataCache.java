@@ -65,7 +65,7 @@ public class DataCache implements Runnable{
 	 */
 	private static String hashString(String dataUrl){
 		
-		return String.valueOf(dataUrl.hashCode()) + ".txt";
+		return String.valueOf(dataUrl.hashCode()) + ".dat";
 	}
 	
 	/**
