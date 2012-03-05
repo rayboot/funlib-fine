@@ -21,6 +21,7 @@ import android.widget.ImageView;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
+import com.funlib.zip.ZipUtily;
 
 /**
  * 图片缓存
@@ -60,7 +61,7 @@ public class ImageCache implements Runnable{
 			imgUrl = String.valueOf(System.currentTimeMillis());
 		}
 		
-		return String.valueOf(imgUrl.hashCode()) + ".jpg";
+		return String.valueOf(imgUrl.hashCode()) + ".wpg";
 	}
 	
 	/**
@@ -218,6 +219,7 @@ public class ImageCache implements Runnable{
 		addBitmap(imgUrl, bitmap);
 		
 		//缓存到文件
+		bitmapBytes = ZipUtily.zipByte(bitmapBytes);
 		FileUtily.saveBytes(FileUtily.getAppSDPath() + "/" + hashString(imgUrl), bitmapBytes);
 		
 	}
@@ -241,6 +243,7 @@ public class ImageCache implements Runnable{
 			
 			String filePath = FileUtily.getAppSDPath() + "/" + hashString(imgUrl);
 			byte[] bytes = FileUtily.getBytes(filePath);
+			bytes = ZipUtily.unZipByte(bytes);
 			return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 		}catch(OutOfMemoryError e){
 			
