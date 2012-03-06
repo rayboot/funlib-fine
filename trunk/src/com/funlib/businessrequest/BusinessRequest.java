@@ -12,6 +12,8 @@ import org.apache.http.util.EntityUtils;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
+
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.utily.Utily;
 
@@ -57,6 +59,9 @@ public class BusinessRequest implements Runnable{
 				super.handleMessage(msg);
 
 				String result = (String)msg.obj;
+				if(TextUtils.isEmpty(result)){
+					result = "";
+				}
                 if(mBusinessRequestListener != null)
                 	mBusinessRequestListener.businessRequestDidFinish(msg.what , mListenerID , result);
 			}

@@ -52,6 +52,9 @@ public class DataCache implements Runnable{
 				super.handleMessage(msg);
 
 				String result = (String)msg.obj;
+				if(TextUtils.isEmpty(result)){
+					result = "";
+				}
                 if(mDataCacheListener != null){
                 	mDataCacheListener.getDataFinished(msg.what, mListenerID, result, DataCache.this);
                 }
