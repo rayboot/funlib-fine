@@ -6,9 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Date;
 
 import com.funlib.log.FLog;
 
+import android.R.integer;
 import android.content.Context;
 import android.os.Environment;
 import android.text.TextUtils;
@@ -222,27 +224,6 @@ public class FileUtily {
 	}
 
 	/**
-	 * 创建临时文件
-	 * @param fielPath
-	 * @return
-	 */
-	public static File getTempFile(Context context){
-		
-		File file = null;
-		try {
-			
-			file = File.createTempFile("tmp", null , context.getCacheDir());
-			file.deleteOnExit();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
-		}
-		
-		return file;
-	}
-	
-	/**
 	 * 创建文件夹
 	 * @param dirPath
 	 * @return
@@ -256,5 +237,51 @@ public class FileUtily {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * 创建临时文件
+	 * @param fielPath
+	 * @return
+	 */
+	public static File createTmpFile(Context context){
+		
+		String rootPath = context.getFilesDir().getAbsolutePath();
+		if(rootPath.endsWith("/") == false){
+			
+			rootPath += "/";
+		}
+		
+		try {
+			
+			String tmpPath = rootPath + new Date().hashCode();
+			File file = new File(tmpPath);
+			file.createNewFile();
+			
+			return file;
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * 应用退出时，删除所有临时文件
+	 * @param context
+	 */
+	public static void deleteTmpFiles(Context context){
+		
+		File rootFiles = context.getFilesDir();
+		File files[] = rootFiles.listFiles();
+		if(files != null){
+			
+			int cnt = files.length;
+			for(int i = 0 ; i < cnt ; ++i){
+				
+				File tmpFile = files[i];
+				tmpFile.delete();
+			}
+		}
 	}
 }
