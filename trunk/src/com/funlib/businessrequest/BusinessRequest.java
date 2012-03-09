@@ -30,8 +30,8 @@ import com.funlib.utily.Utily;
  */
 public class BusinessRequest implements Runnable{
 
-	private int mReadTimeout 			= 	3000;		/** 读取超时时间默认值 */
-	private int mConnectionTimeout 		= 	3000;		/** 连接超时时间默认值 */
+	private int mReadTimeout 			= 	2000;		/** 读取超时时间默认值 */
+	private int mConnectionTimeout 		= 	2000;		/** 连接超时时间默认值 */
 	private int mFailRetryCount			=	2;			/** 失败重试次数 */
 	
 	private Context mContext;
