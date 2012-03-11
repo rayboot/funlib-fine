@@ -61,7 +61,7 @@ public class ImageCache implements Runnable{
 			imgUrl = String.valueOf(System.currentTimeMillis());
 		}
 		
-		return String.valueOf(imgUrl.hashCode()) + ".wpg";
+		return String.valueOf(imgUrl.hashCode());
 	}
 	
 	/**
@@ -218,8 +218,6 @@ public class ImageCache implements Runnable{
 		//缓存到内存
 		addBitmap(imgUrl, bitmap);
 		
-		//缓存到文件
-		bitmapBytes = ZipUtily.zipByte(bitmapBytes);
 		FileUtily.saveBytes(FileUtily.getAppSDPath() + "/" + hashString(imgUrl), bitmapBytes);
 		
 	}
@@ -243,7 +241,6 @@ public class ImageCache implements Runnable{
 			
 			String filePath = FileUtily.getAppSDPath() + "/" + hashString(imgUrl);
 			byte[] bytes = FileUtily.getBytes(filePath);
-			bytes = ZipUtily.unZipByte(bytes);
 			return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 		}catch(OutOfMemoryError e){
 			

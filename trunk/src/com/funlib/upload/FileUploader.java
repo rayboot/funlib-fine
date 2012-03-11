@@ -153,7 +153,7 @@ public class FileUploader implements Runnable {
 			ds.write(buffer, 0, length);
 			
 			tmpTotalLength += length;
-			sendMessage(UploadStatus.UPLOADING , tmpTotalLength/totalLength*100 , null);
+			sendMessage(UploadStatus.UPLOADING , tmpTotalLength*100/totalLength , null);
 		}
 		ds.writeBytes(end);
 		ds.writeBytes(twoHyphens + boundary + twoHyphens + end);

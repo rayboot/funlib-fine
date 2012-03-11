@@ -798,9 +798,9 @@ public class ImageFilter {
 	}
 
 	private static int ps_softlightFun(int src, int mask) {
-		return ((int) ((mask < 128) ? (2 * ((src >> 1) + 64))
-				* ((float) mask / 255) : (255 - (2 * (255 - ((src >> 1) + 64))
-				* (float) (255 - mask) / 255))));
+		return (int) (((src < 128) ? (2 * ((mask >> 1) + 64))
+				* ((float) src / 255) : (255 - (2 * (255 - ((mask >> 1) + 64))
+				* (float) (255 - src) / 255))));
 	}
 
 	private static int ps_hardlightFun(int src, int mask) {
