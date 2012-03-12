@@ -18,6 +18,7 @@ import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
+import com.funlib.log.FLog;
 import com.funlib.utily.Utily;
 
 public class DataCache implements Runnable{
@@ -261,8 +262,6 @@ public class DataCache implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		
-		bForceFromNet = true;//fixme 强制从net
-		
 		DataCacheModel ret = null;
 		if(bForceFromNet == false){
 			
@@ -270,7 +269,7 @@ public class DataCache implements Runnable{
 			if(ret != null){
 				
 				if(checkNeedUpdate(ret) == false){
-					
+				
 					Message msg = Message.obtain();
 					msg.what = DataCacheError.SUCCESS;
 					msg.obj = ret.content;
@@ -290,8 +289,6 @@ public class DataCache implements Runnable{
 		HttpResponse response = null;
 		do {
 			
-//			if(ret != null)
-//				mBaseHttpRequest.setHeaderParam("Last-Modified", new Date(ret.lastModifiedTime).toGMTString());
 			response = mBaseHttpRequest.request(mRequestUrl, mRequestParams);
 			if(response != null){
 				break;
