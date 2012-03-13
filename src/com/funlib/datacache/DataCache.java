@@ -196,7 +196,7 @@ public class DataCache implements Runnable{
 			}
 		}
 		
-		return true;
+		return false;
 	}
 	
 	/**
