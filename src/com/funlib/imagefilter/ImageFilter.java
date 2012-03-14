@@ -1,5 +1,8 @@
 package com.funlib.imagefilter;
 
+import com.funlib.log.FLog;
+
+import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -704,6 +707,15 @@ public class ImageFilter {
 	public static Bitmap ps_getEffectBitmap(EffectType iType, Bitmap src, Bitmap mask, float maskAlpha) {
 		int width = src.getWidth();
 		int height = src.getHeight();
+		int maskWidth = mask.getWidth();
+		int maskHeight = mask.getHeight();
+		Bitmap tmpMask = mask;
+		
+		if(maskWidth != width || maskHeight != height){
+			
+			tmpMask = ImageUtily.resizeBitmap(mask, width, height);
+		}
+		
 		Bitmap bitmap = Bitmap.createBitmap(width, height,
 				Bitmap.Config.ARGB_8888);
 		int pixColorSrc = 0;
@@ -718,8 +730,9 @@ public class ImageFilter {
 		int[] pixelsSrc = new int[width * height];
 		int[] pixelsMask = new int[width * height];
 		src.getPixels(pixelsSrc, 0, width, 0, 0, width, height);
-		mask.getPixels(pixelsMask, 0, width, 0, 0, width, height);
+		tmpMask.getPixels(pixelsMask, 0, width, 0, 0, width, height);
 		for (int i = 0; i < height; i++) {
+			
 			for (int k = 0; k < width; k++) {
 
 				index = width * i + k;

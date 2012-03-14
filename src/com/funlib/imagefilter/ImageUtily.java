@@ -251,22 +251,25 @@ public class ImageUtily {
 		int mask_w = mask.getWidth();
 		int mask_h = mask.getHeight();
 
-		if (src_w < mask_w || src_h < mask_h)
-			src = Bitmap.createScaledBitmap(src, mask_h, mask_h, false);
+		Bitmap tmpMask = mask;
+		if(src_w != mask_w || src_h != mask_h){
+			
+			tmpMask = ImageUtily.resizeBitmap(mask, src_w, src_h);
+		}
 
 		Drawable[] array = new Drawable[2];
 		array[0] = new BitmapDrawable(src);
-		array[1] = new BitmapDrawable(mask);
+		array[1] = new BitmapDrawable(tmpMask);
 
 		LayerDrawable layer = new LayerDrawable(array);
 		Bitmap bitmap = Bitmap
 				.createBitmap(
-						mask_w,
-						mask_w,
+						src_w,
+						src_h,
 						layer.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
 								: Bitmap.Config.RGB_565);
 		Canvas canvas = new Canvas(bitmap);
-		layer.setBounds(0, 0, mask_w, mask_w);
+		layer.setBounds(0, 0, src_w, src_h);
 		layer.draw(canvas);
 		return bitmap;
 	}
@@ -279,7 +282,7 @@ public class ImageUtily {
 	 * @param bgH
 	 * @return
 	 */
-	public static Bitmap addBitmapBlackBG(Bitmap bitmap, int bgW, int bgH) {
+	public static Bitmap addBitmapWhiteBG(Bitmap bitmap, int bgW, int bgH) {
 
 		try {
 
@@ -287,6 +290,10 @@ public class ImageUtily {
 			int y = 0;
 			int bmpW = bitmap.getWidth();
 			int bmpH = bitmap.getHeight();
+			if(bgW > bgH)
+				bgH = bgW;
+			if(bgW < bgH)
+				bgW = bgH;
 			x = (bgW - bmpW) / 2;
 			y = (bgH - bmpH) / 2;
 
@@ -294,7 +301,7 @@ public class ImageUtily {
 			Canvas canvas = new Canvas(output);
 			final Paint paint = new Paint();
 			paint.setAntiAlias(true);
-			canvas.drawARGB(0, 0, 0, 0);
+			canvas.drawARGB(255, 255, 255, 255);
 			canvas.drawBitmap(bitmap, x, y, paint);
 			return output;
 		} catch (Exception e) {
@@ -337,7 +344,7 @@ public class ImageUtily {
 			return null;
 		}
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		b.compress(CompressFormat.JPEG, 80, os);
+		b.compress(CompressFormat.JPEG, 100, os);
 		return os.toByteArray();
 	}
 }
