@@ -18,7 +18,6 @@ import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
-import com.funlib.log.FLog;
 import com.funlib.utily.Utily;
 
 public class DataCache implements Runnable{
@@ -176,30 +175,6 @@ public class DataCache implements Runnable{
 	}
 	
 	/**
-	 * 检查是否需要更新
-	 * @param dcm
-	 * @return
-	 */
-	private boolean checkNeedUpdate(DataCacheModel dcm){
-		
-		BaseHttpRequest brBaseHttpRequest = new BaseHttpRequest(mContext);
-		HttpResponse response = brBaseHttpRequest.request(mRequestUrl, mRequestParams);
-		if(response != null){
-			
-			String newHeader = parserCacheHeader(response);
-			if(TextUtils.isEmpty(newHeader) == false){
-				
-				if(dcm.cacheHeader.equals(newHeader) == false)
-					return true;
-				else
-					return false;
-			}
-		}
-		
-		return false;
-	}
-	
-	/**
 	 * 从http头里解析处最长有效时间
 	 * @param response
 	 * @return
@@ -263,24 +238,28 @@ public class DataCache implements Runnable{
 		// TODO Auto-generated method stub
 		
 		DataCacheModel ret = null;
+		boolean bHaveFindInFiles = false;
+		
 		if(bForceFromNet == false){
 			
 			ret = lookupInFiles(mRequestUrl);
 			if(ret != null){
 				
-				if(checkNeedUpdate(ret) == false){
-				
-					Message msg = Message.obtain();
-					msg.what = DataCacheError.SUCCESS;
-					msg.obj = ret.content;
-					mHandler.sendMessage(msg);
-					
-					return;
-				}
+				bHaveFindInFiles = true;
+				Message msg = Message.obtain();
+				msg.what = DataCacheError.SUCCESS;
+				msg.obj = ret.content;
+				mHandler.sendMessage(msg);
 			}
 		}
 		
 		mBaseHttpRequest = new BaseHttpRequest(mContext);
+		if(ret != null && bHaveFindInFiles){
+			
+			if(TextUtils.isEmpty(ret.cacheHeader) == false){
+				mBaseHttpRequest.setHeaderParam("cache-header", ret.cacheHeader);
+			}
+		}
 		mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
 		mBaseHttpRequest.setReadTimeout(mReadTimeout);
 		
@@ -319,12 +298,15 @@ public class DataCache implements Runnable{
 				msg.what = DataCacheError.SUCCESS;
 				
 				int responseCode = response.getStatusLine().getStatusCode();
-				if(responseCode == 304){
+				String cacheHeader = parserCacheHeader(response);
+				if(responseCode == 304 ||
+						(ret != null && bHaveFindInFiles && (TextUtils.isEmpty(ret.cacheHeader) == false) && (ret.cacheHeader.equals(cacheHeader) == true))){
 					
 					msg.obj = ret.content;
 				}else{
 					
 					try {
+						
 						msg.obj = EntityUtils.toString(response.getEntity(),"UTF-8");
 						
 						ret = new DataCacheModel();
@@ -332,7 +314,7 @@ public class DataCache implements Runnable{
 //						ret.lastModifiedTime = parserLastModifiedTime(response);
 //						ret.maxAvaiableTime = parserMaxAvailableTime(response);
 //						ret.saveTime = new Date().getTime();
-						ret.cacheHeader = parserCacheHeader(response);
+						ret.cacheHeader = cacheHeader;
 						
 						storeDataCahe(ret, mRequestUrl);
 						
@@ -348,7 +330,8 @@ public class DataCache implements Runnable{
 			}
 		}
 		
-		mHandler.sendMessage(msg);
+		if(bHaveFindInFiles == false)
+			mHandler.sendMessage(msg);
 		
 	}
 	

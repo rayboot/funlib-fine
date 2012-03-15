@@ -3,7 +3,10 @@ package com.funlib.basehttprequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
+
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -16,6 +19,7 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 
+import com.funlib.log.FLog;
 import com.funlib.network.NetWork;
 
 import android.content.Context;
@@ -66,7 +70,7 @@ public class BaseHttpRequest {
 		
 		if(mHttpPost != null){
 			
-			mHttpPost.setHeader(name, value);
+			mHttpPost.addHeader(name, value);
 		}
 	}
 	
