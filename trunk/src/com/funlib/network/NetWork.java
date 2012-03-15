@@ -228,7 +228,7 @@ public class NetWork {
 	 */
 	public static String getDefaultWapProxy(){
 		
-		return sDefaultApnNode.proxy;
+		return sDefaultApnNode == null?"":sDefaultApnNode.proxy;
 	}
 	
 	/**
@@ -237,7 +237,7 @@ public class NetWork {
 	 */
 	public static int getDefaultWapPort(){
 		
-		return sDefaultApnNode.port;
+		return sDefaultApnNode == null?0:sDefaultApnNode.port;
 	}
 	
 	public class ApnNode{
