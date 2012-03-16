@@ -98,6 +98,7 @@ public class BaseHttpRequest {
 	        }
 			httpClient.getParams().setIntParameter(HttpConnectionParams.SO_TIMEOUT, mReadTimeout);
 			httpClient.getParams().setIntParameter(HttpConnectionParams.CONNECTION_TIMEOUT, mConnectionTimeout);
+			
 			HttpResponse httpResponse = httpClient.execute(mHttpPost);
 			
 			return httpResponse;
@@ -113,7 +114,6 @@ public class BaseHttpRequest {
 		}catch (Exception e) {
 			// TODO: handle exception
 		}
-		
 		
 		return null;
 	}

@@ -18,6 +18,7 @@ import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
+import com.funlib.log.FLog;
 import com.funlib.utily.Utily;
 
 public class DataCache implements Runnable{
@@ -308,7 +309,7 @@ public class DataCache implements Runnable{
 					try {
 						
 						msg.obj = EntityUtils.toString(response.getEntity(),"UTF-8");
-						
+
 						ret = new DataCacheModel();
 						ret.content = (String)msg.obj;
 //						ret.lastModifiedTime = parserLastModifiedTime(response);
