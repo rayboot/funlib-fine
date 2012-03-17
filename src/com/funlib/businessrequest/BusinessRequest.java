@@ -30,8 +30,8 @@ import com.funlib.utily.Utily;
  */
 public class BusinessRequest implements Runnable{
 
-	private int mReadTimeout 			= 	2000;		/** 读取超时时间默认值 */
-	private int mConnectionTimeout 		= 	2000;		/** 连接超时时间默认值 */
+	private int mReadTimeout 			= 	7000;		/** 读取超时时间默认值 */
+	private int mConnectionTimeout 		= 	7000;		/** 连接超时时间默认值 */
 	private int mFailRetryCount			=	2;			/** 失败重试次数 */
 	
 	private Context mContext;
@@ -109,9 +109,6 @@ public class BusinessRequest implements Runnable{
 		this.mRequestParams = params;
 		this.mRequestUrl = requestUrl;
 		this.mListenerID = listenerId;
-		if(this.mRequestParams == null)
-			this.mRequestParams = new Vector<NameValuePair>();
-		mRequestParams.add(new BasicNameValuePair("IMSIID", Utily.getDeviceIMSI()));
 		
 		new Thread(this).start();
 	}
