@@ -37,8 +37,8 @@ import com.funlib.zip.ZipUtily;
 public class ImageCache implements Runnable{
 
 	
-	private int mReadTimeout 			= 	3000;		/** 读取超时时间默认值 */
-	private int mConnectionTimeout 		= 	3000;		/** 连接超时时间默认值 */
+	private int mReadTimeout 			= 	10000;		/** 读取超时时间默认值 */
+	private int mConnectionTimeout 		= 	10000;		/** 连接超时时间默认值 */
 	
 	private Context mContext;
 	private Handler mHandler;

@@ -32,8 +32,8 @@ import android.content.Context;
  */
 public class BaseHttpRequest {
 
-	private int mReadTimeout 			= 	2000;		/** 读取超时时间默认值 */
-	private int mConnectionTimeout 		= 	2000;		/** 连接超时时间默认值 */
+	private int mReadTimeout;		/** 读取超时时间默认值 */
+	private int mConnectionTimeout;		/** 连接超时时间默认值 */
 
 	private Context mContext;
 	private HttpPost mHttpPost = new HttpPost();
