@@ -17,11 +17,8 @@ import android.os.Message;
 
 public class SDCardSearch {
 
-	private static final String CACHE_FILE_NAME="search.cache";
-	
 	private Context mContext;
 	private Vector<SDCardSearchModel> mSearchResults;
-	private HashMap<Integer, SDCardSearchModel> mSearchResultsMap;
 	private FileSearchListener mFileSearchListener;
 	
 	private Thread mSearchThread;
@@ -54,65 +51,33 @@ public class SDCardSearch {
 			public void run(){
 				
 				sendMessage(SDCardSearchStatus.STATUS_SEARCH_BEGIN.ordinal());
-				mSearchResultsMap = new HashMap<Integer, SDCardSearchModel>();
 				
 				//first from cache
-				try {
-					
-					FileInputStream fis = mContext.openFileInput(CACHE_FILE_NAME);
-					ObjectInputStream ois = new ObjectInputStream(fis);
-					mSearchResults = (Vector<SDCardSearchModel>) ois.readObject();
-					ois.close();
-					sendMessage(SDCardSearchStatus.STATUS_SEARCH_ING.ordinal());
-					
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
 				//delete not exist files from cache
-				if(mSearchResults.size() > 0){
-					
-					Vector<SDCardSearchModel> tmpResult = new Vector<SDCardSearchModel>();
-					for(int i = 0 ; i < mSearchResults.size() ;++i){
-						
-						SDCardSearchModel ssm = tmpResult.get(i);
-						File tmpFile = new File(ssm.fileFullPath);
-						if(tmpFile.exists() == true){
-							mSearchResultsMap.put(ssm.fileFullPath.hashCode(), ssm);
-							tmpResult.add(ssm);
-						}
-					}
-				}
-				
 				//update background
 				searchFiles(rootPath , suffix ,sizeLimit);
 				
 				//save search result 
-				try {
-					
-					FileOutputStream fos = mContext.openFileOutput(CACHE_FILE_NAME, Context.MODE_PRIVATE);
-					ObjectOutputStream oos = new ObjectOutputStream(fos);
-					oos.writeObject(mSearchResults);
-					oos.flush();
-					oos.close();
-					
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
-				
 				sendMessage(SDCardSearchStatus.STATUS_SEARCH_END.ordinal());
 			}
 		};
+		mSearchThread.start();
 	}
 	
 	private void searchFiles(String rootPath, String suffix ,long sizeLimit){
 		
 		File rootFile = new File(rootPath);
 		File[] files = rootFile.listFiles();
+		if(files == null)
+			return;
 		for (File file : files) {
+			
+			if(file.isHidden())
+				continue;
 			
 			if(file.isDirectory()){
 				
-				searchFiles(rootPath , suffix , sizeLimit);
+				searchFiles(file.getAbsolutePath() , suffix , sizeLimit);
 			}else{
 				
 				long size = file.length();
@@ -127,19 +92,13 @@ public class SDCardSearch {
 						continue;
 				}
 				{
+					SDCardSearchModel ssm = new SDCardSearchModel();
+					ssm.fileFullPath = file.getAbsolutePath();
+					ssm.fileName = file.getName();
+					ssm.fileSize = size;
 					
-					String fullPath = file.getAbsolutePath();
-					if(mSearchResultsMap.containsKey(fullPath.hashCode()) == false){
-						
-						SDCardSearchModel ssm = new SDCardSearchModel();
-						ssm.fileFullPath = fullPath;
-						ssm.fileName = file.getName();
-						ssm.fileSize = size;
-						
-						mSearchResults.add(ssm);
-						mSearchResultsMap.put(fullPath.hashCode(), ssm);
-						sendMessage(SDCardSearchStatus.STATUS_SEARCH_ING.ordinal());
-					}
+					mSearchResults.add(ssm);
+					sendMessage(SDCardSearchStatus.STATUS_SEARCH_ING.ordinal());
 				}
 			}
 		}
@@ -176,6 +135,8 @@ public class SDCardSearch {
 		public String fileName;
 		public long fileSize;
 		public String fileFullPath; 
+		
+		public boolean selected;//for multi select
 	}
 	
 	

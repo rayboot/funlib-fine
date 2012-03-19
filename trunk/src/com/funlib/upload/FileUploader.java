@@ -138,6 +138,7 @@ public class FileUploader implements Runnable {
 		ds.writeBytes("Content-Disposition: form-data; "
 				+ "name=\"file\";filename=" + java.net.URLEncoder.encode(mUploadFileName, "utf-8") + end);
 		ds.writeBytes(end);
+		sendMessage(UploadStatus.UPLOADING , 3 , null);
 		/* 设定每次写入1024bytes */
 		int bufferSize = 1024;
 		byte[] buffer = new byte[bufferSize];
@@ -153,7 +154,10 @@ public class FileUploader implements Runnable {
 			ds.write(buffer, 0, length);
 			
 			tmpTotalLength += length;
-			sendMessage(UploadStatus.UPLOADING , tmpTotalLength*100/totalLength , null);
+			int percent = tmpTotalLength*100/totalLength - 5;
+			if(percent < 0)
+				percent = 0;
+			sendMessage(UploadStatus.UPLOADING , percent , null);
 		}
 		ds.writeBytes(end);
 		ds.writeBytes(twoHyphens + boundary + twoHyphens + end);
