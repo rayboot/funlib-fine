@@ -1,6 +1,8 @@
 package com.funlib.imagefilter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 
 import android.R.integer;
 import android.graphics.Bitmap;
@@ -345,6 +347,41 @@ public class ImageUtily {
 		}
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		b.compress(CompressFormat.JPEG, 100, os);
+		if(b != null && b.isRecycled() == false && b.isMutable()){
+			
+			b.recycle();
+			b = null;
+		}
 		return os.toByteArray();
+	}
+	
+public static Bitmap decodeFileBitmap(String filePath , int fixSize){
+		
+		Bitmap bmp = null;
+
+		try {
+			
+			int scale=1;
+			if(fixSize != -1){
+				
+				BitmapFactory.Options o = new BitmapFactory.Options();
+		        o.inJustDecodeBounds = true;
+		        BitmapFactory.decodeFile(filePath, o);
+		        //The new size we want to scale to
+		        //Find the correct scale value. It should be the power of 2.
+		        while(o.outWidth/scale/2>=fixSize && o.outHeight/scale/2>=fixSize)
+		            scale*=2;
+			}
+	        //Decode with inSampleSize
+	        BitmapFactory.Options o2 = new BitmapFactory.Options();
+	        o2.inSampleSize=scale;
+	        bmp = BitmapFactory.decodeFile(filePath, o2);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}catch (OutOfMemoryError e) {
+			// TODO: handle exception
+		}
+		
+		return bmp;
 	}
 }

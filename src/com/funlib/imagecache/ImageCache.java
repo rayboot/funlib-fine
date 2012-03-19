@@ -1,5 +1,7 @@
 package com.funlib.imagecache;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,8 @@ import android.widget.ImageView;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
+import com.funlib.imagefilter.ImageUtily;
+import com.funlib.log.FLog;
 import com.funlib.zip.ZipUtily;
 
 /**
@@ -294,23 +298,39 @@ public class ImageCache implements Runnable{
 		
 		bmp = lookupInMemory(imgUrl);
 		if(bmp == null){
-		
-			bmp = lookupInFiles(imgUrl);
-			if(bmp == null){
-				
-				byte[] bmpBytes = featchBitmap(imgUrl);
-				if(bmpBytes != null){
+			
+			if(imgUrl.startsWith("http")==false){
+			
+				try {
 					
-					try {
+					bmp = ImageUtily.decodeFileBitmap(imgUrl, 30);
+					//缓存到内存
+					addBitmap(imgUrl, bmp);
+				} catch (Exception e) {
+					// TODO: handle exception
+				}catch(OutOfMemoryError e){
+					
+				}
+			}else{
+				
+				bmp = lookupInFiles(imgUrl);
+				if(bmp == null){
+					
+					byte[] bmpBytes = featchBitmap(imgUrl);
+					if(bmpBytes != null){
 						
-						bmp = BitmapFactory.decodeByteArray(bmpBytes, 0, bmpBytes.length);
-						//存储图片
-						storeCachedBitmap(imgUrl , bmp , bmpBytes);
-					} catch (OutOfMemoryError e) {
-						// TODO: handle exception
+						try {
+							
+							bmp = BitmapFactory.decodeByteArray(bmpBytes, 0, bmpBytes.length);
+							//存储图片
+							storeCachedBitmap(imgUrl , bmp , bmpBytes);
+						} catch (OutOfMemoryError e) {
+							// TODO: handle exception
+						}
 					}
 				}
 			}
+		
 		}
 		
 		Message msg = Message.obtain();
