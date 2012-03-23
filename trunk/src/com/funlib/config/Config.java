@@ -28,6 +28,13 @@ public class Config {
 		context = con;
 	}
 	
+	public static boolean checkKeyExists(String key){
+	
+		SharedPreferences sp = context
+				.getSharedPreferences(CONFIG_NAME, 0);
+		return sp.contains(key);
+	}
+	
 	/**
 	 * 
 	 * @param key

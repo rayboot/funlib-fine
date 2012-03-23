@@ -278,6 +278,8 @@ public class ImageCache implements Runnable{
 				// TODO Auto-generated catch block
 				
 				e.printStackTrace();
+			}catch (OutOfMemoryError e) {
+				// TODO: handle exception
 			}
 		}
 		return null;
@@ -303,7 +305,7 @@ public class ImageCache implements Runnable{
 			
 				try {
 					
-					bmp = ImageUtily.decodeFileBitmap(imgUrl, 30);
+					bmp = ImageUtily.decodeFileBitmap(imgUrl, 60);
 					//缓存到内存
 					addBitmap(imgUrl, bmp);
 				} catch (Exception e) {
