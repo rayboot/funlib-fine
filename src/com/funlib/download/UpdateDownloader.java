@@ -26,7 +26,7 @@ import android.os.Message;
  */
 public class UpdateDownloader implements Runnable {
 
-	private static final int BUFFER_SIZE = 1024;//缓冲大小
+	private static final int BUFFER_SIZE = 10*1024;//缓冲大小
 	
 	private int mReadTimeout 			= 	5000;		/** 读取超时时间默认值 */
 	private int mConnectionTimeout 		= 	5000;		/** 连接超时时间默认值 */
@@ -217,7 +217,7 @@ public class UpdateDownloader implements Runnable {
 
                         mDownloadPercent = (int) ((readTotalCnt*100 / fileSize));
                         // FIXME tjianli比较两次下载进度，有明显变化，才会通知界面更新，尽量避免ANR
-                        if (mPreDownloadPercent != mDownloadPercent) {
+                        if (mPreDownloadPercent <= 0 || mDownloadPercent > mPreDownloadPercent  + 10) {
 
                             mPreDownloadPercent = mDownloadPercent;
                             sendMessage(DownloadStatus.STATUS_DOWNLOADING, mDownloadPercent);

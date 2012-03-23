@@ -44,8 +44,10 @@ public class BestTimer implements Runnable{
 	public void cancelTimer(){
 		
 		bCancel = true;
-		tickRequestHandler.removeCallbacks(this);
-		tickRequestHandler = null;
+		if(tickRequestHandler != null){
+			tickRequestHandler.removeCallbacks(this);
+			tickRequestHandler = null;
+		}
 	}
 	
 	/**

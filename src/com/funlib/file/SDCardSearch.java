@@ -18,12 +18,12 @@ import android.os.Message;
 public class SDCardSearch {
 
 	private Context mContext;
-	private Vector<SDCardSearchModel> mSearchResults;
+	private List<SDCardSearchModel> mSearchResults;
 	private FileSearchListener mFileSearchListener;
 	
 	private Thread mSearchThread;
 	
-	public SDCardSearch(Context context , FileSearchListener l , Vector<SDCardSearchModel> result){
+	public SDCardSearch(Context context , FileSearchListener l , List<SDCardSearchModel> result){
 		
 		mContext = context;
 		mSearchResults = result;
@@ -44,7 +44,7 @@ public class SDCardSearch {
 		msg.arg1 = status;
 		mSearchHandler.sendMessage(msg);
 	}
-	public void startSearch(final String rootPath , final String suffix , final long sizeLimit){
+	public void startSearch(final String rootPath , final String suffix , final long sizeLimit , final boolean visitSubFolder){
 		
 		mSearchThread = new Thread(){
 			
@@ -55,7 +55,7 @@ public class SDCardSearch {
 				//first from cache
 				//delete not exist files from cache
 				//update background
-				searchFiles(rootPath , suffix ,sizeLimit);
+				searchFiles(rootPath , suffix ,sizeLimit , visitSubFolder);
 				
 				//save search result 
 				sendMessage(SDCardSearchStatus.STATUS_SEARCH_END.ordinal());
@@ -64,7 +64,7 @@ public class SDCardSearch {
 		mSearchThread.start();
 	}
 	
-	private void searchFiles(String rootPath, String suffix ,long sizeLimit){
+	private void searchFiles(String rootPath, String suffix ,long sizeLimit, boolean visitSubFolder){
 		
 		File rootFile = new File(rootPath);
 		File[] files = rootFile.listFiles();
@@ -75,9 +75,9 @@ public class SDCardSearch {
 			if(file.isHidden())
 				continue;
 			
-			if(file.isDirectory()){
+			if(file.isDirectory() && visitSubFolder){
 				
-				searchFiles(file.getAbsolutePath() , suffix , sizeLimit);
+				searchFiles(file.getAbsolutePath() , suffix , sizeLimit,visitSubFolder);
 			}else{
 				
 				long size = file.length();
@@ -136,7 +136,8 @@ public class SDCardSearch {
 		public long fileSize;
 		public String fileFullPath; 
 		
-		public boolean selected;//for multi select
+		public boolean selected;
+		public int flag;
 	}
 	
 	
