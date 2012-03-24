@@ -30,20 +30,18 @@ import com.funlib.zip.ZipUtily;
 /**
  * 图片缓存
  * 
- * 图片查找步骤：
- * 1，从内存中查找
- * 2，从本地文件中查找
- * 3，从网络获取
+ * 图片查找步骤： 1，从内存中查找 2，从本地文件中查找 3，从网络获取
  * 
  * @author 陶建立
- *
+ * 
  */
-public class ImageCache implements Runnable{
+public class ImageCache implements Runnable {
 
-	
-	private int mReadTimeout 			= 	10000;		/** 读取超时时间默认值 */
-	private int mConnectionTimeout 		= 	10000;		/** 连接超时时间默认值 */
-	
+	private int mReadTimeout = 10000;
+	/** 读取超时时间默认值 */
+	private int mConnectionTimeout = 10000;
+	/** 连接超时时间默认值 */
+
 	private Context mContext;
 	private Handler mHandler;
 	private BaseHttpRequest mBaseHttpRequest;
@@ -52,73 +50,76 @@ public class ImageCache implements Runnable{
 	private String mImageUrl;
 	private List<NameValuePair> mRequestParams;
 
-	private static HashMap<String , SoftReference<Bitmap>> sBitampPools = new HashMap<String , SoftReference<Bitmap>>();
-	
+	private static HashMap<String, SoftReference<Bitmap>> sBitampPools = new HashMap<String, SoftReference<Bitmap>>();
+
 	/**
 	 * 获取图片对应的hashcode
+	 * 
 	 * @return
 	 */
-	private static String hashString(String imgUrl){
-		
-		if(TextUtils.isEmpty(imgUrl) == true){
-			
+	private static String hashString(String imgUrl) {
+
+		if (TextUtils.isEmpty(imgUrl) == true) {
+
 			imgUrl = String.valueOf(System.currentTimeMillis());
 		}
-		
+
 		return String.valueOf(imgUrl.hashCode());
 	}
-	
+
 	/**
 	 * 添加图片到内存缓存
+	 * 
 	 * @param imgUrl
 	 * @param bitmap
 	 */
-	private static void addBitmap(String imgUrl , Bitmap bitmap){
-        
-        if(sBitampPools == null){
-            
-            sBitampPools = new HashMap<String , SoftReference<Bitmap>>();
-        }
-        
-        sBitampPools.put(hashString(imgUrl) , new SoftReference<Bitmap>(bitmap));
-    }
-	
+	private static void addBitmap(String imgUrl, Bitmap bitmap) {
+
+		if (sBitampPools == null) {
+
+			sBitampPools = new HashMap<String, SoftReference<Bitmap>>();
+		}
+
+		sBitampPools.put(hashString(imgUrl), new SoftReference<Bitmap>(bitmap));
+	}
+
 	/**
 	 * 从内存缓存读取图片
+	 * 
 	 * @param imgUrl
 	 * @return
 	 */
-	private static Bitmap getBitmap(String imgUrl){
-        
-        if(sBitampPools == null)
-            return null;
+	private static Bitmap getBitmap(String imgUrl) {
 
-        SoftReference<Bitmap> sr = sBitampPools.get(hashString(imgUrl));
-        if(sr == null)
-            return null;
-        
-        return sr.get();
-    }
-	
+		if (sBitampPools == null)
+			return null;
+
+		SoftReference<Bitmap> sr = sBitampPools.get(hashString(imgUrl));
+		if (sr == null)
+			return null;
+
+		return sr.get();
+	}
+
 	/**
 	 * 清除所有缓存
 	 */
-	public static void clearCache(Context context){
+	public static void clearCache(Context context) {
 
-		if(sBitampPools != null){
-			
+		if (sBitampPools != null) {
+
 			sBitampPools.clear();
 		}
-		
+
 	}
-	
+
 	/**
 	 * 
 	 */
-	public ImageCache(){
-		
-		mHandler = new Handler(){
-			
+	public ImageCache() {
+
+		mHandler = new Handler() {
+
 			@Override
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
@@ -126,170 +127,180 @@ public class ImageCache implements Runnable{
 				if (msg.what == ImageCacheError.SUCCESS) {
 
 					if (mTarget != null && msg.obj != null) {
-						
-//						if(mTarget instanceof View){
-//							
-//							Bitmap bmp = (Bitmap)msg.obj;
-//							Drawable drawable = new BitmapDrawable(bmp);
-//							
-//							View view = (View)mTarget;
-//							view.setBackgroundDrawable(drawable);
-//						}
-						if(mTarget instanceof ImageView){
-							
-							Bitmap bmp = (Bitmap)msg.obj;
-							ImageView iv = (ImageView)mTarget;
+
+						// if(mTarget instanceof View){
+						//
+						// Bitmap bmp = (Bitmap)msg.obj;
+						// Drawable drawable = new BitmapDrawable(bmp);
+						//
+						// View view = (View)mTarget;
+						// view.setBackgroundDrawable(drawable);
+						// }
+						if (mTarget instanceof ImageView) {
+
+							Bitmap bmp = (Bitmap) msg.obj;
+							ImageView iv = (ImageView) mTarget;
 							iv.setImageBitmap(bmp);
-						}else if(mTarget instanceof ImageButton){
-							
-							Bitmap bmp = (Bitmap)msg.obj;
-							ImageButton iv = (ImageButton)mTarget;
+						} else if (mTarget instanceof ImageButton) {
+
+							Bitmap bmp = (Bitmap) msg.obj;
+							ImageButton iv = (ImageButton) mTarget;
 							iv.setImageBitmap(bmp);
-						}else if(mTarget instanceof View){
-							
-							Bitmap bmp = (Bitmap)msg.obj;
+						} else if (mTarget instanceof View) {
+
+							Bitmap bmp = (Bitmap) msg.obj;
 							Drawable drawable = new BitmapDrawable(bmp);
-//							
-							View view = (View)mTarget;
+							//
+							View view = (View) mTarget;
 							view.setBackgroundDrawable(drawable);
 						}
 					}
 
 				}
 
-				if(mImageCacheListener != null){
-					mImageCacheListener.getImageFinished(msg.what, mTarget, (Bitmap) msg.obj , ImageCache.this);
+				if (mImageCacheListener != null) {
+					mImageCacheListener.getImageFinished(msg.what, mTarget,
+							(Bitmap) msg.obj, ImageCache.this);
 				}
 			}
 		};
 	}
-	
+
 	/**
 	 * 设置读操作超时时间，默认3s
+	 * 
 	 * @param timeout
 	 */
-	public void setReadTimeout(int timeout){
-		
+	public void setReadTimeout(int timeout) {
+
 		mReadTimeout = timeout;
 	}
-	
+
 	/**
 	 * 设置链接操作超时时间，默认3s
+	 * 
 	 * @param timeout
 	 */
-	public void setConnectionTimeout(int timeout){
-		
+	public void setConnectionTimeout(int timeout) {
+
 		mConnectionTimeout = timeout;
 	}
-	
+
 	/**
 	 * 设置上下文环境
+	 * 
 	 * @param context
 	 */
-	public void setContext(Context context){
-		
+	public void setContext(Context context) {
+
 		this.mContext = context;
 	}
 
 	/**
 	 * 获取缓存图片
+	 * 
 	 * @param context
 	 * @param listener
 	 * @param target
 	 * @param imgUrl
 	 * @param params
 	 */
-	public void cacheImage(Context context , ImageCacheListener listener, Object target,
-			String imgUrl , List<NameValuePair> params){
-		
+	public void cacheImage(Context context, ImageCacheListener listener,
+			Object target, String imgUrl, List<NameValuePair> params) {
+
 		this.mContext = context;
 		this.mImageCacheListener = listener;
 		this.mTarget = target;
 		this.mImageUrl = imgUrl;
 		this.mRequestParams = params;
-		
+
 		new Thread(this).start();
 	}
 
 	/**
 	 * 缓存图片
+	 * 
 	 * @param imgUrl
 	 * @param bitmap
 	 * @param bitmapBytes
 	 */
-	private void storeCachedBitmap(String imgUrl , Bitmap bitmap , byte[] bitmapBytes){
-		
-		//缓存到内存
+	private void storeCachedBitmap(String imgUrl, Bitmap bitmap,
+			byte[] bitmapBytes) {
+
+		// 缓存到内存
 		addBitmap(imgUrl, bitmap);
-		
-		FileUtily.saveBytes(FileUtily.getAppSDPath() + "/" + hashString(imgUrl), bitmapBytes);
-		
+
+		FileUtily.saveBytes(
+				FileUtily.getAppSDPath() + "/" + hashString(imgUrl),
+				bitmapBytes);
+
 	}
-	
+
 	/**
 	 * 在内存中查找
+	 * 
 	 * @return
 	 */
-	private Bitmap lookupInMemory(String imgUrl){
-		
+	private Bitmap lookupInMemory(String imgUrl) {
+
 		return getBitmap(imgUrl);
 	}
-	
+
 	/**
 	 * 在缓存文件中查找
+	 * 
 	 * @return
 	 */
-	private Bitmap lookupInFiles(String imgUrl){
-		
-		try{
-			
-			String filePath = FileUtily.getAppSDPath() + "/" + hashString(imgUrl);
+	private Bitmap lookupInFiles(String imgUrl) {
+
+		try {
+
+			String filePath = FileUtily.getAppSDPath() + "/"
+					+ hashString(imgUrl);
 			byte[] bytes = FileUtily.getBytes(filePath);
 			return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-		}catch(OutOfMemoryError e){
-			
-		}catch (Exception e) {
+		} catch (OutOfMemoryError e) {
+
+		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		
+
 		return null;
 	}
 
 	/**
 	 * 从网络获取
+	 * 
 	 * @param imgUrl
 	 * @return
 	 */
-	private byte[] featchBitmap(String imgUrl){
+	private byte[] featchBitmap(String imgUrl) {
 
-		mBaseHttpRequest = new BaseHttpRequest(mContext);
-		mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
-		mBaseHttpRequest.setReadTimeout(mReadTimeout);
-		HttpResponse response = mBaseHttpRequest.request(mImageUrl, mRequestParams);
-		if(response == null)
-			return null;
-		
-		if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
-			
-			try {
-				
+		try {
+			mBaseHttpRequest = new BaseHttpRequest(mContext);
+			mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
+			mBaseHttpRequest.setReadTimeout(mReadTimeout);
+			HttpResponse response = mBaseHttpRequest.request(mImageUrl,
+					mRequestParams);
+			if (response == null)
+				return null;
+
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+
 				return EntityUtils.toByteArray(response.getEntity());
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				
-				e.printStackTrace();
-			}catch (OutOfMemoryError e) {
-				// TODO: handle exception
 			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+
+			e.printStackTrace();
+		} catch (OutOfMemoryError e) {
+			// TODO: handle exception
 		}
 		return null;
 	}
 
 	/**
-	 * 图片查找步骤：
-	 * 1，从内存中查找
-	 * 2，从本地文件中查找
-	 * 3，从网络获取
+	 * 图片查找步骤： 1，从内存中查找 2，从本地文件中查找 3，从网络获取
 	 */
 	@Override
 	public void run() {
@@ -297,51 +308,52 @@ public class ImageCache implements Runnable{
 
 		Bitmap bmp = null;
 		final String imgUrl = mImageUrl;
-		
+
 		bmp = lookupInMemory(imgUrl);
-		if(bmp == null){
-			
-			if(imgUrl.startsWith("http")==false){
-			
+		if (bmp == null) {
+
+			if (imgUrl.startsWith("http") == false) {
+
 				try {
-					
+
 					bmp = ImageUtily.decodeFileBitmap(imgUrl, 60);
-					//缓存到内存
+					// 缓存到内存
 					addBitmap(imgUrl, bmp);
 				} catch (Exception e) {
 					// TODO: handle exception
-				}catch(OutOfMemoryError e){
-					
+				} catch (OutOfMemoryError e) {
+
 				}
-			}else{
-				
+			} else {
+
 				bmp = lookupInFiles(imgUrl);
-				if(bmp == null){
-					
+				if (bmp == null) {
+
 					byte[] bmpBytes = featchBitmap(imgUrl);
-					if(bmpBytes != null){
-						
+					if (bmpBytes != null) {
+
 						try {
-							
-							bmp = BitmapFactory.decodeByteArray(bmpBytes, 0, bmpBytes.length);
-							//存储图片
-							storeCachedBitmap(imgUrl , bmp , bmpBytes);
+
+							bmp = BitmapFactory.decodeByteArray(bmpBytes, 0,
+									bmpBytes.length);
+							// 存储图片
+							storeCachedBitmap(imgUrl, bmp, bmpBytes);
 						} catch (OutOfMemoryError e) {
 							// TODO: handle exception
 						}
 					}
 				}
 			}
-		
+
 		}
-		
+
 		Message msg = Message.obtain();
-		if(bmp == null)
+		if (bmp == null)
 			msg.what = ImageCacheError.FAIL;
 		else
 			msg.what = ImageCacheError.SUCCESS;
 		msg.obj = bmp;
 		mHandler.sendMessage(msg);
 	}
-	
+
 }
