@@ -292,6 +292,11 @@ public class DataCache implements Runnable{
 					
 					msg.what = DataCacheError.FAIL;
 					msg.obj = null;
+					
+					if(ret != null && ret.content != null){
+						msg.what = DataCacheError.SUCCESS;
+						msg.obj = ret.content;
+					}
 				}else{
 					
 					try {
