@@ -217,7 +217,7 @@ public class UpdateDownloader implements Runnable {
 
                         mDownloadPercent = (int) ((readTotalCnt*100 / fileSize));
                         // FIXME tjianli比较两次下载进度，有明显变化，才会通知界面更新，尽量避免ANR
-                        if (mPreDownloadPercent <= 0 || mDownloadPercent > mPreDownloadPercent  + 10) {
+                        if (mDownloadPercent > mPreDownloadPercent  + 10) {
 
                             mPreDownloadPercent = mDownloadPercent;
                             sendMessage(DownloadStatus.STATUS_DOWNLOADING, mDownloadPercent);
