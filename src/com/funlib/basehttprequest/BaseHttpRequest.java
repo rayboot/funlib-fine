@@ -23,6 +23,7 @@ import org.apache.http.params.HttpParams;
 import android.content.Context;
 import android.util.Log;
 
+import com.funlib.log.FLog;
 import com.funlib.network.NetWork;
 
 /**
@@ -42,7 +43,7 @@ public class BaseHttpRequest {
 	private Context mContext;
 	private HttpPost mHttpPost = new HttpPost();
 	// set timeout parameters for HttpClient
-	HttpParams httpParameters = new BasicHttpParams();
+	HttpParams httpParameters;
 
 	public BaseHttpRequest(Context context) {
 
@@ -93,7 +94,8 @@ public class BaseHttpRequest {
 	public HttpResponse request(String url, List<NameValuePair> params) {
 
 		try {
-			Log.i("url", url);
+			
+			httpParameters = new BasicHttpParams();
 			mHttpPost.setURI(URI.create(url));
 			if (params != null && params.size() > 0) {
 
@@ -102,16 +104,18 @@ public class BaseHttpRequest {
 				mHttpPost.setEntity(httpEntity);
 			}
 			DefaultHttpClient httpClient = new DefaultHttpClient();
+			
 			if (NetWork.isDefaultWap(mContext)) {
 
 				HttpHost proxy = new HttpHost(NetWork.getDefaultWapProxy(),
 						NetWork.getDefaultWapPort());
-				httpClient.getParams().setParameter(
+				httpParameters.setParameter(
 						ConnRoutePNames.DEFAULT_PROXY, proxy);
+				
 			}
-			httpClient.getParams().setIntParameter(
+			httpParameters.setIntParameter(
 					HttpConnectionParams.SO_TIMEOUT, mReadTimeout);
-			httpClient.getParams()
+			httpParameters
 					.setIntParameter(HttpConnectionParams.CONNECTION_TIMEOUT,
 							mConnectionTimeout);
 			HttpConnectionParams.setSocketBufferSize(httpParameters, 8192);// setting
