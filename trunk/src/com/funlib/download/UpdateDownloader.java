@@ -146,13 +146,13 @@ public class UpdateDownloader implements Runnable {
     public void run() {
 
     	// /线程一开始运行，即可发送STATUS_DOWNLOADING消息
-    	sendMessage(DownloadStatus.STATUS_STARTDOWNLOADING , 0);
+//    	sendMessage(DownloadStatus.STATUS_STARTDOWNLOADING , 0);
         //
 
         URL url = null;
         boolean bInitConnection = false;
         byte[] buffer = null;
-        long readTotalCnt = 0;
+        int readTotalCnt = 0;
         int retryCount = 0;
         int fileSize = 0;
         File file = null;
@@ -196,6 +196,9 @@ public class UpdateDownloader implements Runnable {
         			accessFile.seek(readTotalCnt);
         			mHttpURLConnection.connect();
         			fileSize = mHttpURLConnection.getContentLength();
+        			
+        			sendMessage(DownloadStatus.STATUS_STARTDOWNLOADING , fileSize/1024);
+        			
                     mDownloadInputStream = mHttpURLConnection.getInputStream();
                     
                     bInitConnection = true;
@@ -215,9 +218,10 @@ public class UpdateDownloader implements Runnable {
                         readTotalCnt += realReadCnt;
                         accessFile.write(buffer, 0, realReadCnt);
 
-                        mDownloadPercent = (int) ((readTotalCnt*100 / fileSize));
+//                        mDownloadPercent = (int) ((readTotalCnt*100 / fileSize));
+                        mDownloadPercent = readTotalCnt/1024;
                         // FIXME tjianli比较两次下载进度，有明显变化，才会通知界面更新，尽量避免ANR
-                        if (mDownloadPercent > mPreDownloadPercent  + 10) {
+                        if (mDownloadPercent > mPreDownloadPercent  + 30) {
 
                             mPreDownloadPercent = mDownloadPercent;
                             sendMessage(DownloadStatus.STATUS_DOWNLOADING, mDownloadPercent);
