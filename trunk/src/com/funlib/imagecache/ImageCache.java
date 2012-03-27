@@ -25,6 +25,7 @@ import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
 import com.funlib.imagefilter.ImageUtily;
 import com.funlib.log.FLog;
+import com.funlib.thread.ThreadPoolUtily;
 import com.funlib.zip.ZipUtily;
 
 /**
@@ -128,14 +129,6 @@ public class ImageCache implements Runnable {
 
 					if (mTarget != null && msg.obj != null) {
 
-						// if(mTarget instanceof View){
-						//
-						// Bitmap bmp = (Bitmap)msg.obj;
-						// Drawable drawable = new BitmapDrawable(bmp);
-						//
-						// View view = (View)mTarget;
-						// view.setBackgroundDrawable(drawable);
-						// }
 						if (mTarget instanceof ImageView) {
 
 							Bitmap bmp = (Bitmap) msg.obj;
@@ -214,7 +207,7 @@ public class ImageCache implements Runnable {
 		this.mImageUrl = imgUrl;
 		this.mRequestParams = params;
 
-		new Thread(this).start();
+		ThreadPoolUtily.executorTask(this);
 	}
 
 	/**
@@ -289,13 +282,13 @@ public class ImageCache implements Runnable {
 
 				return EntityUtils.toByteArray(response.getEntity());
 			}
-		} catch (Exception e) {
+		}catch (OutOfMemoryError e) {
+			// TODO: handle exception
+		}catch (Exception e) {
 			// TODO Auto-generated catch block
 
 			e.printStackTrace();
-		} catch (OutOfMemoryError e) {
-			// TODO: handle exception
-		}
+		} 
 		return null;
 	}
 

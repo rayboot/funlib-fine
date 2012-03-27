@@ -3,8 +3,10 @@ package com.funlib.imagefilter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 import android.R.integer;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
@@ -355,7 +357,7 @@ public class ImageUtily {
 		return os.toByteArray();
 	}
 	
-public static Bitmap decodeFileBitmap(String filePath , int fixSize){
+	public static Bitmap decodeFileBitmap(String filePath , int fixSize){
 		
 		Bitmap bmp = null;
 
@@ -383,5 +385,28 @@ public static Bitmap decodeFileBitmap(String filePath , int fixSize){
 		}
 		
 		return bmp;
+	}
+	
+	/**
+	 * 创建等比缩放图片
+	 * @param src
+	 * @param targetW
+	 * @param targetH
+	 * @return
+	 */
+	public static Bitmap createProportionBitmap(Bitmap src , int targetW , int targetH){
+		
+		if(src == null) return src;
+		
+		int srcWidth = src.getWidth();
+		int srcHeight = src.getHeight();
+		double rate1 = ((double) srcWidth) / (double) targetW + 0.1; 
+		 double rate2 = ((double) srcHeight) / (double) targetH + 0.1; 
+		 // 根据缩放比率大的进行缩放控制 
+		 double rate = rate1 > rate2 ? rate1 : rate2; 
+		 int newWidth = (int) (((double) srcWidth) / rate); 
+		 int newHeight = (int) (((double) srcHeight) / rate); 
+		 
+		 return Bitmap.createScaledBitmap(src, newWidth, newHeight, true);
 	}
 }
