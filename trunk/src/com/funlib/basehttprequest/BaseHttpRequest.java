@@ -38,7 +38,6 @@ public class BaseHttpRequest {
 	/** 读取超时时间默认值 */
 	private int mConnectionTimeout;
 	/** 连接超时时间默认值 */
-	int timeoutSocket = 4000;
 
 	private Context mContext;
 	private HttpPost mHttpPost = new HttpPost();
