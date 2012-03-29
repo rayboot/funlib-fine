@@ -33,9 +33,12 @@ public class FileUtily {
 		boolean sdCardExist = Environment.getExternalStorageState().equals(
 				android.os.Environment.MEDIA_MOUNTED);
 		if (sdCardExist) {
-			sdDir = Environment.getExternalStorageDirectory();// 获取跟目录
 			
-			return sdDir.getAbsolutePath() + "/";
+			sdDir = Environment.getExternalStorageDirectory();// 获取跟目录
+			String tmpPath = sdDir.getAbsolutePath();
+			if(!tmpPath.endsWith(File.separator))
+				tmpPath += File.separator;
+			return tmpPath;
 		}
 		
 		return null;
@@ -57,13 +60,13 @@ public class FileUtily {
 		String sdPath = getSDPath();
 		if(TextUtils.isEmpty(sdPath) == false){
 			
-			sdPath += name;
+			sdPath += name + File.separator;
 			
 			File file = new File(sdPath);
 			if(file.exists() == false)
 				file.mkdir();
 			
-			sAppSDPath = sdPath + "/";
+			sAppSDPath = sdPath;
 		}
 		
 		return true;
@@ -80,6 +83,7 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
+			if(!file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			outStream.write(data);
 			outStream.close();
@@ -102,7 +106,7 @@ public class FileUtily {
 	public static boolean saveBytes(File file, byte[] data) {
 
 		try {
-
+			if(file == null || !file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			outStream.write(data);
 			outStream.close();
@@ -127,6 +131,7 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
+			if(!file.exists() || !file.canRead()) return null;
 			FileInputStream inStream = new FileInputStream(file);
 			byte bytes[] = new byte[inStream.available()];
 			inStream.read(bytes);
@@ -154,6 +159,7 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
+			if(!file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			ObjectOutputStream oos = new ObjectOutputStream(outStream);
 			oos.writeObject(object);
@@ -179,7 +185,7 @@ public class FileUtily {
 	public static boolean saveObject(File file, Object object) {
 
 		try {
-
+			if(file == null || !file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			ObjectOutputStream oos = new ObjectOutputStream(outStream);
 			oos.writeObject(object);
@@ -207,6 +213,7 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
+			if(!file.exists() || !file.canRead()) return null;
 			FileInputStream fis = new FileInputStream(file);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			Object obj = ois.readObject();
@@ -217,7 +224,6 @@ public class FileUtily {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-
 			return null;
 		}
 

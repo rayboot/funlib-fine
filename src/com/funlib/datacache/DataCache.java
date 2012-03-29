@@ -19,6 +19,7 @@ import android.text.TextUtils;
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
 import com.funlib.log.FLog;
+import com.funlib.md5.MD5;
 import com.funlib.utily.Utily;
 
 public class DataCache implements Runnable{
@@ -69,7 +70,7 @@ public class DataCache implements Runnable{
 	 */
 	private static String hashString(String dataUrl){
 		
-		return String.valueOf(dataUrl.hashCode()) ;
+		return dataUrl.hashCode()+".dat" ;
 	}
 	
 	/**
@@ -152,7 +153,7 @@ public class DataCache implements Runnable{
 	 */
 	private DataCacheModel lookupInFiles(String dataUrl){
 		
-		return (DataCacheModel) FileUtily.getObject(FileUtily.getAppSDPath() + "/" + hashString(dataUrl));
+		return (DataCacheModel) FileUtily.getObject(FileUtily.getAppSDPath() + hashString(dataUrl));
 	}
 	
 	/**
@@ -162,7 +163,7 @@ public class DataCache implements Runnable{
 	 */
 	private void storeDataCahe(DataCacheModel model , String dataUrl){
 		
-		FileUtily.saveObject(FileUtily.getAppSDPath() + "/" + hashString(mRequestUrl), model);
+		FileUtily.saveObject(FileUtily.getAppSDPath() + hashString(dataUrl), model);
 	}
 	
 	/**
@@ -280,6 +281,12 @@ public class DataCache implements Runnable{
 
 				msg.what = DataCacheError.FAIL;
 				msg.obj = null;
+				
+				if(ret != null && ret.content != null){
+					
+					msg.what = DataCacheError.SUCCESS;
+					msg.obj = ret.content;
+				}
 			}else{
 				
 				int responseCode = response.getStatusLine().getStatusCode();
