@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.List;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpMessage;
@@ -21,6 +22,7 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.funlib.log.FLog;
@@ -44,6 +46,8 @@ public class BaseHttpRequest {
 	// set timeout parameters for HttpClient
 	HttpParams httpParameters;
 
+	public static String JSESSION_ID="";
+	
 	public BaseHttpRequest(Context context) {
 
 		mContext = context;
@@ -82,6 +86,24 @@ public class BaseHttpRequest {
 			mHttpPost.addHeader(name, value);
 		}
 	}
+	
+	/**
+	 * 解析处cache-header字段
+	 * @param response
+	 * @return
+	 */
+	private String parserJSESSIONID(HttpResponse response){
+		
+		String header = "";
+		if(response != null){
+			
+			Header cacheHeader = response.getFirstHeader("sessionid");
+			if(cacheHeader != null)
+				header = cacheHeader.getValue();
+		}
+		
+		return header;
+	}
 
 	/**
 	 * 以同步方式发起httppost请求
@@ -92,6 +114,22 @@ public class BaseHttpRequest {
 	 */
 	public HttpResponse request(String url, List<NameValuePair> params) {
 
+		if(url != null){
+			
+			if(TextUtils.isEmpty(JSESSION_ID) == false){
+				
+				String[] s = url.split("\\?");
+				if (s != null && s.length >= 2) {
+
+					url = s[0] + ";jsessionid=" + JSESSION_ID + "?";
+					url += s[1];
+				}else{
+					
+					url += ";jsessionid=" + JSESSION_ID + "?";
+				}
+			}
+		}
+		
 		try {
 			
 			httpParameters = new BasicHttpParams();
@@ -122,7 +160,10 @@ public class BaseHttpRequest {
 			httpClient.setParams(httpParameters);
 
 			HttpResponse httpResponse = httpClient.execute(mHttpPost);
-
+			String tmpSessionId = parserJSESSIONID(httpResponse);
+			if(!TextUtils.isEmpty(tmpSessionId)){
+				JSESSION_ID = tmpSessionId;
+			}
 			return httpResponse;
 
 		} catch (OutOfMemoryError e) {

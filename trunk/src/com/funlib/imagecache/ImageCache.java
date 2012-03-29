@@ -25,6 +25,7 @@ import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
 import com.funlib.imagefilter.ImageUtily;
 import com.funlib.log.FLog;
+import com.funlib.md5.MD5;
 import com.funlib.thread.ThreadPoolUtily;
 import com.funlib.zip.ZipUtily;
 
@@ -59,7 +60,7 @@ public class ImageCache {
 			imgUrl = String.valueOf(System.currentTimeMillis());
 		}
 
-		return String.valueOf(imgUrl.hashCode());
+		return imgUrl.hashCode()+".pic";
 	}
 
 	/**
@@ -152,7 +153,7 @@ public class ImageCache {
 		addBitmap(imgUrl, bitmap);
 
 		FileUtily.saveBytes(
-				FileUtily.getAppSDPath() + "/" + hashString(imgUrl),
+				FileUtily.getAppSDPath() + hashString(imgUrl),
 				bitmapBytes);
 
 	}
@@ -239,22 +240,6 @@ public class ImageCache {
 		resultBmp = lookupInMemory(imgUrl);
 		if (resultBmp != null)
 			return resultBmp;
-
-		if (imgUrl.startsWith("http") == false) {
-
-			try {
-
-				resultBmp = ImageUtily.decodeFileBitmap(imgUrl, 60);
-				// 缓存到内存
-				addBitmap(imgUrl, resultBmp);
-			} catch (Exception e) {
-				// TODO: handle exception
-			} catch (OutOfMemoryError e) {
-
-			}
-
-			return resultBmp;
-		}
 
 		// find files
 		resultBmp = lookupInFiles(imgUrl);
