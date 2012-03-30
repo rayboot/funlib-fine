@@ -29,7 +29,6 @@ import android.graphics.drawable.LayerDrawable;
 
 public class ImageUtily {
 
-
 	/**
 	 * 修改图片亮度
 	 * 
@@ -256,8 +255,8 @@ public class ImageUtily {
 		int mask_h = mask.getHeight();
 
 		Bitmap tmpMask = mask;
-		if(src_w != mask_w || src_h != mask_h){
-			
+		if (src_w != mask_w || src_h != mask_h) {
+
 			tmpMask = ImageUtily.resizeBitmap(mask, src_w, src_h);
 		}
 
@@ -294,9 +293,9 @@ public class ImageUtily {
 			int y = 0;
 			int bmpW = bitmap.getWidth();
 			int bmpH = bitmap.getHeight();
-			if(bgW > bgH)
+			if (bgW > bgH)
 				bgH = bgW;
-			if(bgW < bgH)
+			if (bgW < bgH)
 				bgW = bgH;
 			x = (bgW - bmpW) / 2;
 			y = (bgH - bmpH) / 2;
@@ -349,64 +348,61 @@ public class ImageUtily {
 		}
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		b.compress(CompressFormat.JPEG, 100, os);
-		if(b != null && b.isRecycled() == false && b.isMutable()){
-			
+		if (b != null && b.isRecycled() == false && b.isMutable()) {
+
 			b.recycle();
 			b = null;
 		}
 		return os.toByteArray();
 	}
-	
-	public static Bitmap decodeFileBitmap(String filePath , int fixSize){
-		
+
+	public static Bitmap decodeFileBitmap(String filePath, int fixSize) {
+
 		Bitmap bmp = null;
 
-		try {
-			
-			int scale=1;
-			if(fixSize != -1){
-				
-				BitmapFactory.Options o = new BitmapFactory.Options();
-		        o.inJustDecodeBounds = true;
-		        BitmapFactory.decodeFile(filePath, o);
-		        //The new size we want to scale to
-		        //Find the correct scale value. It should be the power of 2.
-		        while(o.outWidth/scale/2>=fixSize && o.outHeight/scale/2>=fixSize)
-		            scale*=2;
-			}
-	        //Decode with inSampleSize
-	        BitmapFactory.Options o2 = new BitmapFactory.Options();
-	        o2.inSampleSize=scale;
-	        bmp = BitmapFactory.decodeFile(filePath, o2);
-		} catch (Exception e) {
-			// TODO: handle exception
-		}catch (OutOfMemoryError e) {
-			// TODO: handle exception
+		int scale = 1;
+		if (fixSize != -1) {
+
+			BitmapFactory.Options o = new BitmapFactory.Options();
+			o.inJustDecodeBounds = true;
+			BitmapFactory.decodeFile(filePath, o);
+			// The new size we want to scale to
+			// Find the correct scale value. It should be the power of 2.
+			while (o.outWidth / scale / 2 >= fixSize
+					&& o.outHeight / scale / 2 >= fixSize)
+				scale *= 2;
 		}
-		
+		// Decode with inSampleSize
+		BitmapFactory.Options o2 = new BitmapFactory.Options();
+		o2.inSampleSize = scale;
+		bmp = BitmapFactory.decodeFile(filePath, o2);
+
 		return bmp;
 	}
-	
+
 	/**
 	 * 创建等比缩放图片
+	 * 
 	 * @param src
 	 * @param targetW
 	 * @param targetH
 	 * @return
 	 */
-	public static Bitmap createProportionBitmap(Bitmap src , int targetW , int targetH){
-		
-		if(src == null) return src;
-		
+	public static Bitmap createProportionBitmap(Bitmap src, int targetW,
+			int targetH) {
+
+		if (src == null)
+			return src;
+
 		int srcWidth = src.getWidth();
 		int srcHeight = src.getHeight();
-		double rate1 = ((double) srcWidth) / (double) targetW + 0.1; 
-		 double rate2 = ((double) srcHeight) / (double) targetH + 0.1; 
-		 // 根据缩放比率大的进行缩放控制 
-		 double rate = rate1 > rate2 ? rate1 : rate2; 
-		 int newWidth = (int) (((double) srcWidth) / rate); 
-		 int newHeight = (int) (((double) srcHeight) / rate); 
-		 
-		 return Bitmap.createScaledBitmap(src, newWidth, newHeight, true);
+		double rate1 = ((double) srcWidth) / (double) targetW + 0.1;
+		double rate2 = ((double) srcHeight) / (double) targetH + 0.1;
+		// 根据缩放比率大的进行缩放控制
+		double rate = rate1 > rate2 ? rate1 : rate2;
+		int newWidth = (int) (((double) srcWidth) / rate);
+		int newHeight = (int) (((double) srcHeight) / rate);
+
+		return Bitmap.createScaledBitmap(src, newWidth, newHeight, true);
 	}
 }
