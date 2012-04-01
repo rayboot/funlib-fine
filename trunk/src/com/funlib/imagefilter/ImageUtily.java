@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilePermission;
+import java.util.Date;
 
 import android.R.integer;
 import android.content.Context;
@@ -388,12 +390,13 @@ public class ImageUtily {
 	 * @param targetH
 	 * @return
 	 */
-	public static Bitmap createProportionBitmap(Bitmap src, int targetW,
-			int targetH) {
+	public static Bitmap createProportionCompressBitmap(Context context , Bitmap src, int targetW,
+			int targetH , int quality) {
 
 		if (src == null)
 			return src;
 
+		final String TMP_FILE_NAME = "tmpcompress.jpg";
 		int srcWidth = src.getWidth();
 		int srcHeight = src.getHeight();
 		double rate1 = ((double) srcWidth) / (double) targetW + 0.1;
@@ -403,6 +406,61 @@ public class ImageUtily {
 		int newWidth = (int) (((double) srcWidth) / rate);
 		int newHeight = (int) (((double) srcHeight) / rate);
 
-		return Bitmap.createScaledBitmap(src, newWidth, newHeight, true);
+		Bitmap tmpBitmap = Bitmap.createScaledBitmap(src, newWidth, newHeight, true);
+		try {
+			
+		 	FileOutputStream fos = context.openFileOutput(TMP_FILE_NAME, Context.MODE_PRIVATE);
+		 	tmpBitmap.compress(CompressFormat.JPEG, quality, fos);
+		 	fos.close();
+
+		 	if(tmpBitmap != null && !tmpBitmap.isRecycled()){
+		 		tmpBitmap.recycle();
+		 	}
+		 	FileInputStream fis = context.openFileInput(TMP_FILE_NAME);
+		 	tmpBitmap = BitmapFactory.decodeStream(fis);
+		 	fis.close();
+		 	context.deleteFile(TMP_FILE_NAME);
+		 	return tmpBitmap;
+		}catch (OutOfMemoryError e) {
+			// TODO: handle exception
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		return null;
+	}
+	
+	public static Bitmap scaleBitmapToSize(Context context , Bitmap bitmap , int targetW , int targetH , int quality){
+		
+		final String TMP_FILE_NAME = "tmpcompress.jpg";
+		try {
+			
+			int bitmapWidth = bitmap.getWidth();
+			int bitmapHeight = bitmap.getHeight();
+			float scaleWidth = (float) targetW / bitmapWidth;
+			float scaleHeight = (float) targetH / bitmapHeight;
+			Matrix matrix = new Matrix();
+			matrix.postScale(scaleWidth, scaleHeight);
+			Bitmap tmpBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmapWidth, bitmapHeight, matrix, false);
+			FileOutputStream fos = context.openFileOutput(TMP_FILE_NAME, Context.MODE_PRIVATE);
+			tmpBitmap.compress(CompressFormat.JPEG, quality, fos);
+		 	fos.close();
+
+		 	if(tmpBitmap != null && !tmpBitmap.isRecycled()){
+		 		tmpBitmap.recycle();
+		 	}
+		 	FileInputStream fis = context.openFileInput(TMP_FILE_NAME);
+		 	tmpBitmap = BitmapFactory.decodeStream(fis);
+		 	fis.close();
+		 	context.deleteFile(TMP_FILE_NAME);
+		 	return tmpBitmap;
+		 	
+		}catch (OutOfMemoryError e) {
+			// TODO: handle exception
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		return null;
 	}
 }
