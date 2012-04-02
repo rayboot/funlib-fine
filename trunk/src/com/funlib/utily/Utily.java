@@ -7,12 +7,15 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.StatFs;
+import android.provider.MediaStore.Images.Thumbnails;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.view.Display;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -21,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.List;
-
 /**
  * 用法：
  * Utily.init(this)，使用前必须初始化
@@ -455,4 +457,43 @@ public class Utily {
 		return (int) (pxValue / scale + 0.5f);
 	}
 	
+	/**
+	 * 获取系统DCIM路径
+	 * @param context
+	 * @return
+	 */
+	public static String getSystemDCIMPath(Context context){
+		
+		String[] projection = { Thumbnails._ID,Thumbnails._ID, Thumbnails.IMAGE_ID,  
+                Thumbnails.DATA };  
+        Cursor cur = context.getContentResolver().query(Thumbnails.EXTERNAL_CONTENT_URI, projection,  
+                null, null, null);  
+        if (cur != null && cur.moveToFirst()) {  
+        	
+            int dataColumn = cur.getColumnIndex(Thumbnails.DATA);  
+            do {  
+            	
+            	String	image_path = cur.getString(dataColumn);
+            	if(TextUtils.isEmpty(image_path) == false){
+            		
+            		image_path = image_path.toLowerCase();
+            		String[] paths = image_path.split(".thumbnails");
+            		if(paths != null && paths.length > 0){
+            			
+            			String dcimPath = paths[0];
+            			if(!TextUtils.isEmpty(dcimPath)){
+            				if(!dcimPath.endsWith(File.separator))
+            					dcimPath += File.separator;
+            			}
+            			return dcimPath;
+            		}
+            	}
+            	
+                break;
+            } while (cur.moveToNext());  
+  
+        }
+        
+        return null;
+	}
 }
