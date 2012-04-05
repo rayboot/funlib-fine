@@ -8,11 +8,9 @@ import java.util.List;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.params.ConnRoutePNames;
@@ -23,9 +21,7 @@ import org.apache.http.params.HttpParams;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 
-import com.funlib.log.FLog;
 import com.funlib.network.NetWork;
 
 /**

@@ -2,13 +2,11 @@ package com.funlib.datacache;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Vector;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
@@ -18,9 +16,6 @@ import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
-import com.funlib.log.FLog;
-import com.funlib.md5.MD5;
-import com.funlib.utily.Utily;
 
 public class DataCache implements Runnable{
 

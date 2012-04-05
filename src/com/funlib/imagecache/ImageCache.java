@@ -1,14 +1,14 @@
 package com.funlib.imagecache;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.List;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.util.EntityUtils;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,11 +23,6 @@ import android.widget.ImageView;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
-import com.funlib.imagefilter.ImageUtily;
-import com.funlib.log.FLog;
-import com.funlib.md5.MD5;
-import com.funlib.thread.ThreadPoolUtily;
-import com.funlib.zip.ZipUtily;
 
 /**
  * 图片缓存

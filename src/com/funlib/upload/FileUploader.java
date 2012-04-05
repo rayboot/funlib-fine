@@ -10,11 +10,12 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 
-import com.funlib.httputily.HttpUtily;
-import com.funlib.network.NetWork;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+
+import com.funlib.httputily.HttpUtily;
+import com.funlib.network.NetWork;
 
 /**
  * 只用于上传组建

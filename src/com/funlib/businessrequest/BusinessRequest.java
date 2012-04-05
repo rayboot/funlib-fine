@@ -1,12 +1,10 @@
 package com.funlib.businessrequest;
 
 import java.util.List;
-import java.util.Vector;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
@@ -15,7 +13,6 @@ import android.os.Message;
 import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
-import com.funlib.utily.Utily;
 
 /**
  * 图片缓存
