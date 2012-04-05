@@ -276,6 +276,9 @@ public class ImageUtily {
 		Canvas canvas = new Canvas(bitmap);
 		layer.setBounds(0, 0, src_w, src_h);
 		layer.draw(canvas);
+		if(tmpMask.isRecycled() == false){
+			tmpMask.recycle();
+		}
 		return bitmap;
 	}
 
