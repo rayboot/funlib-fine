@@ -7,12 +7,13 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
-import com.funlib.log.FLog;
-import com.funlib.network.NetWork;
 
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+
+import com.funlib.log.FLog;
+import com.funlib.network.NetWork;
 
 /**
  * 只用于升级下载组建

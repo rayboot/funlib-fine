@@ -1,5 +1,10 @@
 package com.funlib.utily;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.util.List;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -19,11 +24,6 @@ import android.text.TextUtils;
 import android.view.Display;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.util.List;
 /**
  * 用法：
  * Utily.init(this)，使用前必须初始化

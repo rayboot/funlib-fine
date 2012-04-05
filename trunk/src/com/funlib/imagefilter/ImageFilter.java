@@ -1,10 +1,5 @@
 package com.funlib.imagefilter;
 
-import java.nio.IntBuffer;
-
-import com.funlib.log.FLog;
-
-import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -672,13 +667,13 @@ public class ImageFilter {
 				tmpBitmap.setPixels(result, 0, width, 0, 0, width, height);
 			}
 		
-			nativeFreeSrcBitmapMemory();
-			nativeFreeMaskBitmapMemory();
-			nativeFreeResultBitmapMemory();
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		
+
+		nativeFreeSrcBitmapMemory();
+		nativeFreeMaskBitmapMemory();
+		nativeFreeResultBitmapMemory();
 		return tmpBitmap;
 	}
 	

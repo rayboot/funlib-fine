@@ -1,16 +1,9 @@
 package com.funlib.file;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
 
-import android.R.integer;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
