@@ -1,5 +1,6 @@
 package com.funlib.datacache;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -35,6 +36,17 @@ public class DataCache implements Runnable{
 	private boolean bCanceled;
 	
 	private boolean bForceFromNet;	/** 强制从网络获取新数据 */
+	
+	private static String sDataCachePath = "";
+	static{
+		
+		String appPath = FileUtily.getAppSDPath();
+		if(appPath != null){
+			
+			sDataCachePath = appPath + File.separator + "datacache" + File.separator;
+			FileUtily.mkDir(sDataCachePath);
+		}
+	}
 	
 	/**
 	 * 
@@ -148,7 +160,7 @@ public class DataCache implements Runnable{
 	 */
 	private DataCacheModel lookupInFiles(String dataUrl){
 		
-		return (DataCacheModel) FileUtily.getObject(FileUtily.getAppSDPath() + hashString(dataUrl));
+		return (DataCacheModel) FileUtily.getObject(sDataCachePath + hashString(dataUrl));
 	}
 	
 	/**
@@ -158,7 +170,7 @@ public class DataCache implements Runnable{
 	 */
 	private void storeDataCahe(DataCacheModel model , String dataUrl){
 		
-		FileUtily.saveObject(FileUtily.getAppSDPath() + hashString(dataUrl), model);
+		FileUtily.saveObject(sDataCachePath + hashString(dataUrl), model);
 	}
 	
 	/**

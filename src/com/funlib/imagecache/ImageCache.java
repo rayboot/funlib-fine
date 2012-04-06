@@ -1,5 +1,6 @@
 package com.funlib.imagecache;
 
+import java.io.File;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.List;
@@ -40,9 +41,19 @@ public class ImageCache {
 	/** 连接超时时间默认值 */
 
 	private Context mContext;
-
 	private static HashMap<String, SoftReference<Bitmap>> sBitampPools = new HashMap<String, SoftReference<Bitmap>>();
 
+	private static String sImageCachePath = "";
+	static{
+		
+		String appPath = FileUtily.getAppSDPath();
+		if(appPath != null){
+			
+			sImageCachePath = appPath + File.separator + "imgcache" + File.separator;
+			FileUtily.mkDir(sImageCachePath);
+		}
+	}
+	
 	/**
 	 * 获取图片对应的hashcode
 	 * 
@@ -147,8 +158,7 @@ public class ImageCache {
 		// 缓存到内存
 		addBitmap(imgUrl, bitmap);
 
-		FileUtily.saveBytes(
-				FileUtily.getAppSDPath() + hashString(imgUrl),
+		FileUtily.saveBytes(sImageCachePath + hashString(imgUrl),
 				bitmapBytes);
 
 	}
@@ -172,8 +182,7 @@ public class ImageCache {
 
 		try {
 
-			String filePath = FileUtily.getAppSDPath() + "/"
-					+ hashString(imgUrl);
+			String filePath = sImageCachePath + hashString(imgUrl);
 			byte[] bytes = FileUtily.getBytes(filePath);
 			return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 		} catch (OutOfMemoryError e) {
