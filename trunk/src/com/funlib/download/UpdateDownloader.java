@@ -12,7 +12,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 
-import com.funlib.log.FLog;
 import com.funlib.network.NetWork;
 
 /**
