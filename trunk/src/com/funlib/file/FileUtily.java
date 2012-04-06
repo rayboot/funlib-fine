@@ -79,7 +79,6 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
-			if(!file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			outStream.write(data);
 			outStream.close();
@@ -102,7 +101,6 @@ public class FileUtily {
 	public static boolean saveBytes(File file, byte[] data) {
 
 		try {
-			if(file == null || !file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			outStream.write(data);
 			outStream.close();
@@ -155,7 +153,6 @@ public class FileUtily {
 		try {
 
 			File file = new File(filePath);
-			if(!file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			ObjectOutputStream oos = new ObjectOutputStream(outStream);
 			oos.writeObject(object);
@@ -181,7 +178,6 @@ public class FileUtily {
 	public static boolean saveObject(File file, Object object) {
 
 		try {
-			if(file == null || !file.canWrite()) return false;
 			FileOutputStream outStream = new FileOutputStream(file);
 			ObjectOutputStream oos = new ObjectOutputStream(outStream);
 			oos.writeObject(object);

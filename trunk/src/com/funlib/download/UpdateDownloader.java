@@ -33,6 +33,7 @@ public class UpdateDownloader implements Runnable {
 	private int mConnectionTimeout 		= 	5000;		/** 连接超时时间默认值 */
 	private int mFailRetryCount			=	3;			/** 失败重试次数 */
 
+	private boolean bPaused;
 	private boolean bCanceled;
 	private String mUrl;
 	private DownloadListener mDownloadListener;
@@ -98,6 +99,7 @@ public class UpdateDownloader implements Runnable {
 	 */
 	public void download(Object tag, String url, DownloadListener listener, String filePath) {
 
+		bPaused = false;
 		bCanceled = false;
 		mUpdateTag = tag;
 		mUrl = url;
@@ -128,6 +130,16 @@ public class UpdateDownloader implements Runnable {
 		}catch(Exception e){
 		    
 		}
+	}
+	
+	public void pause(){
+		
+		bPaused = true;
+	}
+	
+	public void resume(){
+		
+		bPaused = false;
 	}
 	
 	/**
@@ -205,31 +217,35 @@ public class UpdateDownloader implements Runnable {
                     bInitConnection = true;
         		}else{//binitconnection == true
         			
-        			buffer = null;
-        			buffer = new byte[BUFFER_SIZE];
-                    int realReadCnt = mDownloadInputStream.read(buffer);
-                    if (realReadCnt == -1) {// 读完
+        			if(bPaused == false){
+        				
+        				buffer = null;
+            			buffer = new byte[BUFFER_SIZE];
+                        int realReadCnt = mDownloadInputStream.read(buffer);
+                        if (realReadCnt == -1) {// 读完
 
-                        sendMessage(DownloadStatus.STATUS_COMPLETE, mDownloadPercent);
-                        return;
-                    } else {
+                            sendMessage(DownloadStatus.STATUS_COMPLETE, mDownloadPercent);
+                            return;
+                        } else {
 
-                        retryCount = 0;// 重置retryCount
+                            retryCount = 0;// 重置retryCount
 
-                        readTotalCnt += realReadCnt;
-                        accessFile.write(buffer, 0, realReadCnt);
+                            readTotalCnt += realReadCnt;
+                            accessFile.write(buffer, 0, realReadCnt);
 
-//                        mDownloadPercent = (int) ((readTotalCnt*100 / fileSize));
-                        mDownloadPercent = readTotalCnt/1024;
-                        // FIXME tjianli比较两次下载进度，有明显变化，才会通知界面更新，尽量避免ANR
-                        if (mDownloadPercent > mPreDownloadPercent  + 30) {
+//                            mDownloadPercent = (int) ((readTotalCnt*100 / fileSize));
+                            mDownloadPercent = readTotalCnt/1024;
+                            // FIXME tjianli比较两次下载进度，有明显变化，才会通知界面更新，尽量避免ANR
+                            if (mDownloadPercent > mPreDownloadPercent  + 30) {
 
-                            mPreDownloadPercent = mDownloadPercent;
-                            sendMessage(DownloadStatus.STATUS_DOWNLOADING, mDownloadPercent);
+                                mPreDownloadPercent = mDownloadPercent;
+                                sendMessage(DownloadStatus.STATUS_DOWNLOADING, mDownloadPercent);
+                            }
+                            //
+
                         }
-                        //
-
-                    }
+        			}
+        			
         		}
         		
         		
@@ -239,7 +255,6 @@ public class UpdateDownloader implements Runnable {
 				canceled();
 				bCanceled = false;
 				
-				FLog.i(">>>>retry for :" + retryCount);
 				if (retryCount >= mFailRetryCount) {
 					
 					sendMessage(DownloadStatus.STATUS_NET_ERROR , mDownloadPercent);
