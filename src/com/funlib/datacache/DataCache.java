@@ -11,21 +11,20 @@ import org.apache.http.NameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
-import android.os.Handler;
+import android.os.AsyncTask;
 import android.os.Message;
 import android.text.TextUtils;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
 
-public class DataCache implements Runnable{
+public class DataCache{
 
 	private int mReadTimeout 			= 	7000;		/** 读取超时时间默认值 */
 	private int mConnectionTimeout 		= 	7000;		/** 连接超时时间默认值 */
 	private int mFailRetryCount			=	2;			/** 失败重试次数 */
 	
 	private Context mContext;
-	private Handler mHandler;
 	private BaseHttpRequest mBaseHttpRequest;
 	private DataCacheListener mDataCacheListener;
 	private String mRequestUrl;
@@ -54,21 +53,6 @@ public class DataCache implements Runnable{
 	public DataCache(){
 		
 		bForceFromNet = false;
-		mHandler = new Handler(){
-			
-			@Override
-			public void handleMessage(Message msg) {
-				super.handleMessage(msg);
-
-				String result = (String)msg.obj;
-				if(TextUtils.isEmpty(result)){
-					result = "";
-				}
-                if(mDataCacheListener != null){
-                	mDataCacheListener.getDataFinished(msg.what, mListenerID, result, DataCache.this);
-                }
-			}
-		};
 	}
 	
 	/**
@@ -123,7 +107,12 @@ public class DataCache implements Runnable{
 		this.mRequestUrl = requestUrl;
 		this.mListenerID = listenerId;
 		
-		new Thread(this).start();
+		try {
+			
+			new DataCacheTask().execute();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 	}
 	
 	/**
@@ -239,104 +228,120 @@ public class DataCache implements Runnable{
 		return header;
 	}
 
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		
-		DataCacheModel ret = null;
-		if(bForceFromNet == false){
-			
-			ret = lookupInFiles(mRequestUrl);
-		}
-		
-		mBaseHttpRequest = new BaseHttpRequest(mContext);
-		mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
-		mBaseHttpRequest.setReadTimeout(mReadTimeout);
-		if(ret != null){
-			
-			if(TextUtils.isEmpty(ret.cacheHeader) == false){
-				mBaseHttpRequest.setHeaderParam("cache-header", ret.cacheHeader);
-			}
-		}
-		
-		bCanceled = false;
-		mNowRetryCount = 0;
-		HttpResponse response = null;
-		do {
-			
-			response = mBaseHttpRequest.request(mRequestUrl, mRequestParams);
-			if(response != null){
-				break;
-			}else{
-				
-				++mNowRetryCount;
-			}
-			
-			if(bCanceled == true)
-				break;
-			
-		} while (mNowRetryCount < mFailRetryCount);
-		
-		Message msg = Message.obtain();
-		if(bCanceled == true){
-			
-			msg.what = DataCacheError.CANCELED;
-			msg.obj = null;
-		}else{
-			
-			if(response == null){
+	private class DataCacheTask extends AsyncTask<Void,Integer,Message>{
 
-				msg.what = DataCacheError.FAIL;
-				msg.obj = null;
+		@Override
+		protected Message doInBackground(Void... params) {
+			// TODO Auto-generated method stub
+			
+			DataCacheModel ret = null;
+			if(bForceFromNet == false){
 				
-				if(ret != null && ret.content != null){
-					
-					msg.what = DataCacheError.SUCCESS;
-					msg.obj = ret.content;
+				ret = lookupInFiles(mRequestUrl);
+			}
+			
+			mBaseHttpRequest = new BaseHttpRequest(mContext);
+			mBaseHttpRequest.setConnectionTimeout(mConnectionTimeout);
+			mBaseHttpRequest.setReadTimeout(mReadTimeout);
+			if(ret != null){
+				
+				if(TextUtils.isEmpty(ret.cacheHeader) == false){
+					mBaseHttpRequest.setHeaderParam("cache-header", ret.cacheHeader);
 				}
+			}
+			
+			bCanceled = false;
+			mNowRetryCount = 0;
+			HttpResponse response = null;
+			do {
+				
+				response = mBaseHttpRequest.request(mRequestUrl, mRequestParams);
+				if(response != null){
+					break;
+				}else{
+					
+					++mNowRetryCount;
+				}
+				
+				if(bCanceled == true)
+					break;
+				
+			} while (mNowRetryCount < mFailRetryCount);
+			
+			Message msg = Message.obtain();
+			if(bCanceled == true){
+				
+				msg.what = DataCacheError.CANCELED;
+				msg.obj = null;
 			}else{
 				
-				int responseCode = response.getStatusLine().getStatusCode();
-				String cacheHeader = parserCacheHeader(response);
-				if(ret != null && ret.cacheHeader != null && (responseCode == HttpStatus.SC_NOT_MODIFIED || (cacheHeader.equals(ret.cacheHeader) == true))){
-					
-					msg.what = DataCacheError.SUCCESS;
-					msg.obj = ret.content;
-				}else if(responseCode != HttpStatus.SC_OK){
-					
+				if(response == null){
+
 					msg.what = DataCacheError.FAIL;
 					msg.obj = null;
 					
 					if(ret != null && ret.content != null){
+						
 						msg.what = DataCacheError.SUCCESS;
 						msg.obj = ret.content;
 					}
 				}else{
 					
-					try {
+					int responseCode = response.getStatusLine().getStatusCode();
+					String cacheHeader = parserCacheHeader(response);
+					if(ret != null && ret.cacheHeader != null && (responseCode == HttpStatus.SC_NOT_MODIFIED || (cacheHeader.equals(ret.cacheHeader) == true))){
 						
 						msg.what = DataCacheError.SUCCESS;
-						msg.obj = EntityUtils.toString(response.getEntity(),"UTF-8");
-
-						ret = new DataCacheModel();
-						ret.content = (String)msg.obj;
-						ret.cacheHeader = cacheHeader;
-						
-						storeDataCahe(ret, mRequestUrl);
-						
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						msg.obj = ret.content;
+					}else if(responseCode != HttpStatus.SC_OK){
 						
 						msg.what = DataCacheError.FAIL;
 						msg.obj = null;
+						
+						if(ret != null && ret.content != null){
+							msg.what = DataCacheError.SUCCESS;
+							msg.obj = ret.content;
+						}
+					}else{
+						
+						try {
+							
+							msg.what = DataCacheError.SUCCESS;
+							msg.obj = EntityUtils.toString(response.getEntity(),"UTF-8");
+
+							ret = new DataCacheModel();
+							ret.content = (String)msg.obj;
+							ret.cacheHeader = cacheHeader;
+							
+							storeDataCahe(ret, mRequestUrl);
+							
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							
+							msg.what = DataCacheError.FAIL;
+							msg.obj = null;
+						}
 					}
+					
 				}
-				
 			}
+			return msg;
+		}
+
+		@Override
+		protected void onPostExecute(Message msg) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(msg);
+			
+			String result = (String)msg.obj;
+			if(TextUtils.isEmpty(result)){
+				result = "";
+			}
+            if(mDataCacheListener != null){
+            	mDataCacheListener.getDataFinished(msg.what, mListenerID, result, DataCache.this);
+            }
 		}
 		
-		mHandler.sendMessage(msg);
 	}
-	
 }

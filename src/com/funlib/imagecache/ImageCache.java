@@ -15,8 +15,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
-import android.os.Message;
+import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageButton;
@@ -249,75 +248,82 @@ public class ImageCache {
 		resultBmp = lookupInFiles(imgUrl);
 		if (resultBmp != null)
 			return resultBmp;
-
-		final Handler handler = new Handler() {
-
-			@Override
-			public void handleMessage(Message msg) {
-				super.handleMessage(msg);
-
-				if (msg.what == ImageCacheError.SUCCESS) {
-
-					if (target != null && msg.obj != null) {
-
-						if (target instanceof ImageView) {
-
-							Bitmap bmp = (Bitmap) msg.obj;
-							ImageView iv = (ImageView) target;
-							iv.setImageBitmap(bmp);
-						} else if (target instanceof ImageButton) {
-
-							Bitmap bmp = (Bitmap) msg.obj;
-							ImageButton iv = (ImageButton) target;
-							iv.setImageBitmap(bmp);
-						} else if (target instanceof View) {
-
-							Bitmap bmp = (Bitmap) msg.obj;
-							Drawable drawable = new BitmapDrawable(bmp);
-							//
-							View view = (View) target;
-							view.setBackgroundDrawable(drawable);
-						}
-					}
-
-				}
-
-				if (listener != null) {
-					listener.getImageFinished(msg.what, target,
-							(Bitmap) msg.obj, ImageCache.this);
-				}
-			}
-		};
-		new Thread() {
-
-			public void run() {
-
-				byte[] bmpBytes = featchBitmap(imgUrl);
-				Bitmap bmp = null;
-				if (bmpBytes != null) {
-
-					try {
-
-						bmp = BitmapFactory.decodeByteArray(bmpBytes, 0,
-								bmpBytes.length);
-
-						// 存储图片
-						storeCachedBitmap(imgUrl, bmp, bmpBytes);
-					} catch (OutOfMemoryError e) {
-						// TODO: handle exception
-					}
-				}
-				
-				Message msg = Message.obtain();
-				msg.what = ImageCacheError.SUCCESS;
-				if(bmp == null){
-					msg.what = ImageCacheError.FAIL;
-				}
-				msg.obj = bmp;
-				handler.sendMessage(msg);
-			}
-		}.start();
-
+		try {
+			
+			new ImageCacheTask().execute(listener , target , imgUrl , params);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
 		return null;
+	}
+	
+	private class ImageCacheTask extends AsyncTask<Object,Integer,Bitmap>{
+
+		private ImageCacheListener listener;
+		private Object target;
+		private String imgUrl;
+		private List<NameValuePair> requestParams;
+		
+		@Override
+		protected Bitmap doInBackground(Object... params) {
+			// TODO Auto-generated method stub
+			
+			listener = (ImageCacheListener) params[0];
+			target = params[1];
+			imgUrl = (String)params[2];
+			requestParams = (List<NameValuePair>) params[3];
+			
+			Bitmap resultBmp = null;
+			byte[] bmpBytes = featchBitmap(imgUrl);
+			if (bmpBytes != null) {
+
+				try {
+
+					resultBmp = BitmapFactory.decodeByteArray(bmpBytes, 0,bmpBytes.length);
+					// 存储图片
+					storeCachedBitmap(imgUrl, resultBmp, bmpBytes);
+				} catch (OutOfMemoryError e) {
+					// TODO: handle exception
+				}
+			}
+			bmpBytes = null;
+			return resultBmp;
+		}
+
+		@Override
+		protected void onPostExecute(Bitmap bitmap) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(bitmap);
+			
+			
+			if (target != null && bitmap != null) {
+
+				if (target instanceof ImageView) {
+
+					ImageView iv = (ImageView) target;
+					iv.setImageBitmap(bitmap);
+				} else if (target instanceof ImageButton) {
+
+					ImageButton iv = (ImageButton) target;
+					iv.setImageBitmap(bitmap);
+				} else if (target instanceof View) {
+
+					Drawable drawable = new BitmapDrawable(bitmap);
+					//
+					View view = (View) target;
+					view.setBackgroundDrawable(drawable);
+				}
+			}
+			
+			int errorCode = ImageCacheError.SUCCESS;
+			if(bitmap == null){
+				errorCode = ImageCacheError.FAIL;
+			}
+			if (listener != null) {
+				listener.getImageFinished(errorCode, target , bitmap , ImageCache.this);
+			}
+		}
+		
 	}
 }
