@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <jni.h>
 #include <android/log.h>
+#include <android/bitmap.h>
 
 #define LOG_TAG "--imagefilter--"
 
@@ -33,6 +34,7 @@ static __inline__ int ps_darkenFun(int src, int mask , float maskAlpha) {
 }
 
 static __inline__ int ps_multiplyFun(int src, int mask , float maskAlpha) {
+	
 	src = mask * src / 255;
 	return ((int) (maskAlpha * mask + (1 - maskAlpha) * src));
 }
@@ -260,7 +262,7 @@ void JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeFreeMaskBitmapMemory(
     }
 }
         
-jintArray JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmap(    
+jintArray JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapLower(    
         JNIEnv* env, jobject obj, int effectType , jintArray srcBuf,jintArray maskBuf, float maskAlpha, int w, int h) { 
     
     jint *srcTmpBuf = (*env)->GetIntArrayElements(env , srcBuf, 0);    
@@ -304,4 +306,88 @@ jintArray JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmap(
     (*env)->ReleaseIntArrayElements(env , maskBuf, maskTmpBuf, 0);    
     
     return resultBitmapMemory;    
+}
+
+static int rgb_clamp(int value) {
+  if(value > 255) {
+    return 255;
+  }
+  if(value < 0) {
+    return 0;
+  }
+  return value;
+}
+int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapHigher(    
+        JNIEnv* env, jobject obj, int effectType , jobject src , jobject mask , jobject result ,  float maskAlpha) { 
+
+	AndroidBitmapInfo  srcInfo;
+	AndroidBitmapInfo  maskInfo;
+	AndroidBitmapInfo  resultInfo;
+	void* srcPixel;
+	void* maskPixel;
+	void* resultPixel;
+	int ret;
+	int x , y;
+	int w , h;
+	int srcR , srcG , srcB;
+	int maskR , maskG , maskB;
+	int resultR , resultG , resultB;
+	uint32_t* srcLine;
+	uint32_t* maskLine;
+	uint32_t* resultLine;
+
+	if ((ret = AndroidBitmap_getInfo(env, src, &srcInfo)) < 0) {
+		return -1;
+     }
+     if ((ret = AndroidBitmap_getInfo(env, mask, &maskInfo)) < 0) {
+		return -1;
+     }
+     if ((ret = AndroidBitmap_getInfo(env, result, &resultInfo)) < 0) {
+		return -1;
+     }
+     
+     if ((ret = AndroidBitmap_lockPixels(env, src, &srcPixel)) < 0) {
+     	return -1;
+    }
+    if ((ret = AndroidBitmap_lockPixels(env, mask, &maskPixel)) < 0) {
+    	AndroidBitmap_unlockPixels(env, src);
+     	return -1;
+    }
+    if ((ret = AndroidBitmap_lockPixels(env, result, &resultPixel)) < 0) {
+    	AndroidBitmap_unlockPixels(env, src);
+		AndroidBitmap_unlockPixels(env, mask);
+     	return -1;
+    }
+    
+    w = srcInfo.width;
+    h = srcInfo.height;
+    for(y = 0 ; y < h ; ++y){
+    
+    	srcLine = (uint32_t*)srcPixel;
+    	maskLine = (uint32_t*)maskPixel;
+    	resultLine = (uint32_t*)resultPixel;
+    	for(x = 0 ; x < w ; ++x){
+
+    		srcR = (int) ((srcLine[x] & 0x00FF0000) >> 16);
+			srcG = (int)((srcLine[x] & 0x0000FF00) >> 8);
+			srcB = (int) (srcLine[x] & 0x00000FF );
+			maskR = (int) ((maskLine[x] & 0x00FF0000) >> 16);
+			maskG = (int)((maskLine[x] & 0x0000FF00) >> 8);
+			maskB = (int) (maskLine[x] & 0x00000FF );
+			
+			resultR = effectFun_options[effectType](srcR , maskR , maskAlpha);
+			resultG = effectFun_options[effectType](srcG , maskG , maskAlpha);
+			resultB = effectFun_options[effectType](srcB , maskB , maskAlpha);
+			resultLine[x] = ((srcR << 16) & 0x00FF0000) |((srcG << 8) & 0x0000FF00) |(srcB & 0x000000FF);
+    	}
+    	
+    	srcPixel = (char*)srcPixel + srcInfo.stride;
+    	maskPixel = (char*)maskPixel + srcInfo.stride;
+    	resultPixel = (char*)resultPixel + resultInfo.stride;
+    }
+
+	AndroidBitmap_unlockPixels(env, src);
+	AndroidBitmap_unlockPixels(env, mask);
+	AndroidBitmap_unlockPixels(env, result);
+	return 0;
 }
