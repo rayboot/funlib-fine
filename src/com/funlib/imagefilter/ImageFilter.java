@@ -1,5 +1,6 @@
 package com.funlib.imagefilter;
 
+import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -651,29 +652,45 @@ public class ImageFilter {
 			tmpMask = ImageUtily.resizeBitmap(mask, width, height);
 		}
 		
+		String osVersion = android.os.Build.VERSION.SDK;
+		int numVersion = Integer.parseInt(osVersion);
 		Bitmap tmpBitmap = null;
-		try {
+		if(numVersion < 8){
 			
-			int[] pixelsSrc = nativeAllocSrcBitmapMemory(width*height);
-			src.getPixels(pixelsSrc, 0, width, 0, 0, width, height);
-			int[] pixelsMask = nativeAllocMaskBitmapMemory(width*height);
-			tmpMask.getPixels(pixelsMask, 0, width, 0, 0, width, height);
+			try {
+				
+				int[] pixelsSrc = nativeAllocSrcBitmapMemory(width*height);
+				src.getPixels(pixelsSrc, 0, width, 0, 0, width, height);
+				int[] pixelsMask = nativeAllocMaskBitmapMemory(width*height);
+				tmpMask.getPixels(pixelsMask, 0, width, 0, 0, width, height);
+				
+				nativeAllocResultBitmapMemory(width*height);
+				int[] result = nativeGetEffectBitmapLower(iType.ordinal() , pixelsSrc, pixelsMask, maskAlpha , width, height);
+				
+				if(result != null){
+					tmpBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+					tmpBitmap.setPixels(result, 0, width, 0, 0, width, height);
+				}
 			
-			nativeAllocResultBitmapMemory(width*height);
-			int[] result = nativeGetEffectBitmap(iType.ordinal() , pixelsSrc, pixelsMask, maskAlpha , width, height);
-			
-			if(result != null){
-				tmpBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-				tmpBitmap.setPixels(result, 0, width, 0, 0, width, height);
+			} catch (Exception e) {
+				// TODO: handle exception
 			}
-		
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
 
-		nativeFreeSrcBitmapMemory();
-		nativeFreeMaskBitmapMemory();
-		nativeFreeResultBitmapMemory();
+			nativeFreeSrcBitmapMemory();
+			nativeFreeMaskBitmapMemory();
+			nativeFreeResultBitmapMemory();
+			return tmpBitmap;
+		}else{
+			
+			tmpBitmap = Bitmap.createBitmap(width, height, Config.RGB_565);
+			int ret = nativeGetEffectBitmapHigher(iType.ordinal(), src, tmpMask, tmpBitmap, maskAlpha);
+			if(ret != 0){
+				
+				tmpBitmap.recycle();
+				tmpBitmap = null;
+			}
+		}
+		
 		return tmpBitmap;
 	}
 	
@@ -686,11 +703,14 @@ public class ImageFilter {
 			// TODO: handle exception
 		}
 	}
-	private static native int[] nativeGetEffectBitmap(int type , int[] srcBuf, int[] maskBuf, float maskAlpha , int w, int h);
+	private static native int[] nativeGetEffectBitmapLower(int type , int[] srcBuf, int[] maskBuf, float maskAlpha , int w, int h);
 	private static native int[] nativeAllocSrcBitmapMemory(int size);   
 	private static native void nativeFreeSrcBitmapMemory();   
 	private static native int[] nativeAllocMaskBitmapMemory(int size);   
 	private static native void nativeFreeMaskBitmapMemory();   
 	private static native void nativeAllocResultBitmapMemory(int size);   
 	private static native void nativeFreeResultBitmapMemory();   
+	
+	private static native int nativeGetEffectBitmapHigher(int type , Bitmap src , Bitmap mask, Bitmap result , float maskAlpha );
+	
 }
