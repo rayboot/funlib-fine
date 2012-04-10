@@ -38,7 +38,7 @@ public class ImageUtily {
 	public static Bitmap changeBrightness(Bitmap bmp, int brightness) {
 
 		Bitmap bitmap = Bitmap.createBitmap(bmp.getWidth(), bmp.getHeight(),
-				Config.ARGB_8888);
+				Config.RGB_565);
 		ColorMatrix cMatrix = new ColorMatrix();
 		cMatrix.set(new float[] { 1, 0, 0, 0, brightness, 0, 1, 0, 0,
 				brightness,// 改变亮度
@@ -63,7 +63,7 @@ public class ImageUtily {
 	public static Bitmap changeContrast(Bitmap bmp, float contrast) {
 
 		Bitmap bitmap = Bitmap.createBitmap(bmp.getWidth(), bmp.getHeight(),
-				Config.ARGB_8888);
+				Config.RGB_565);
 		ColorMatrix cMatrix = new ColorMatrix();
 		cMatrix.set(new float[] { contrast, 0, 0, 0, 0, 0, contrast, 0, 0, 0,// 改变对比度
 				0, 0, contrast, 0, 0, 0, 0, 0, 1, 0 });
@@ -85,7 +85,7 @@ public class ImageUtily {
 	public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, float corner) {
 		try {
 			Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-					bitmap.getHeight(), Config.ARGB_8888);
+					bitmap.getHeight(), Config.RGB_565);
 			Canvas canvas = new Canvas(output);
 			final Paint paint = new Paint();
 			final Rect rect = new Rect(0, 0, bitmap.getWidth(),
@@ -267,7 +267,7 @@ public class ImageUtily {
 				.createBitmap(
 						src_w,
 						src_h,
-						layer.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+						layer.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.RGB_565
 								: Bitmap.Config.RGB_565);
 		Canvas canvas = new Canvas(bitmap);
 		layer.setBounds(0, 0, src_w, src_h);

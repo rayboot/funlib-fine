@@ -19,7 +19,10 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := imagefilter
 LOCAL_SRC_FILES := imagefilter.c
 
-LOCAL_LDLIBS    := -llog -ljnigraphics
-LOCAL_CFLAGS  += -D__DEBUG__
+#LOCAL_LDLIBS    := -llog
+#LOCAL_CFLAGS += -D__DEBUG__ 
+
+#LOCAL_LDLIBS    := -ljnigraphics
+#LOCAL_CFLAGS  += -D__HIGHER_SDK__
 
 include $(BUILD_SHARED_LIBRARY)

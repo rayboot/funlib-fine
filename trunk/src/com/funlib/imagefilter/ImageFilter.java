@@ -1,5 +1,7 @@
 package com.funlib.imagefilter;
 
+import com.funlib.log.FLog;
+
 import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -24,7 +26,7 @@ public class ImageFilter {
 		width = bmpOriginal.getWidth();
 
 		Bitmap bmpGrayscale = Bitmap.createBitmap(width, height,
-				Bitmap.Config.RGB_565);
+				Bitmap.Config.ARGB_8888);
 		Canvas c = new Canvas(bmpGrayscale);
 		Paint paint = new Paint();
 		ColorMatrix cm = new ColorMatrix();
@@ -92,7 +94,7 @@ public class ImageFilter {
 		int width = bmp.getWidth();
 		int height = bmp.getHeight();
 		Bitmap bitmap = Bitmap.createBitmap(width, height,
-				Bitmap.Config.ARGB_8888);
+				Bitmap.Config.RGB_565);
 
 		int pixR = 0;
 		int pixG = 0;
@@ -668,7 +670,7 @@ public class ImageFilter {
 				int[] result = nativeGetEffectBitmapLower(iType.ordinal() , pixelsSrc, pixelsMask, maskAlpha , width, height);
 				
 				if(result != null){
-					tmpBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+					tmpBitmap = Bitmap.createBitmap(width, height, Config.RGB_565);
 					tmpBitmap.setPixels(result, 0, width, 0, 0, width, height);
 				}
 			
@@ -679,10 +681,13 @@ public class ImageFilter {
 			nativeFreeSrcBitmapMemory();
 			nativeFreeMaskBitmapMemory();
 			nativeFreeResultBitmapMemory();
+			
+			tmpMask.recycle();
+			tmpMask = null;
 			return tmpBitmap;
 		}else{
 			
-			tmpBitmap = Bitmap.createBitmap(width, height, Config.RGB_565);
+			tmpBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
 			int ret = nativeGetEffectBitmapHigher(iType.ordinal(), src, tmpMask, tmpBitmap, maskAlpha);
 			if(ret != 0){
 				
@@ -697,8 +702,14 @@ public class ImageFilter {
 	static{
 		
 		try {
+			String osVersion = android.os.Build.VERSION.SDK;
+			int numVersion = Integer.parseInt(osVersion);
+			if(numVersion < 8){
+				System.loadLibrary("imagefilter");
+			}else{
+				System.loadLibrary("imagefilter1");
+			}
 			
-			System.loadLibrary("imagefilter");
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
