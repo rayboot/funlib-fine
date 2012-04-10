@@ -299,21 +299,25 @@ public class ImageCache {
 			
 			if (target != null && bitmap != null) {
 
-				if (target instanceof ImageView) {
+				View view = (View) target;
+				if(imgUrl.equals(view.getTag())){
+					
+					if (target instanceof ImageView) {
 
-					ImageView iv = (ImageView) target;
-					iv.setImageBitmap(bitmap);
-				} else if (target instanceof ImageButton) {
+						ImageView iv = (ImageView) target;
+						iv.setImageBitmap(bitmap);
+					} else if (target instanceof ImageButton) {
 
-					ImageButton iv = (ImageButton) target;
-					iv.setImageBitmap(bitmap);
-				} else if (target instanceof View) {
+						ImageButton iv = (ImageButton) target;
+						iv.setImageBitmap(bitmap);
+					} else if (target instanceof View) {
 
-					Drawable drawable = new BitmapDrawable(bitmap);
-					//
-					View view = (View) target;
-					view.setBackgroundDrawable(drawable);
+						Drawable drawable = new BitmapDrawable(bitmap);
+						//
+						view.setBackgroundDrawable(drawable);
+					}
 				}
+				
 			}
 			
 			int errorCode = ImageCacheError.SUCCESS;
