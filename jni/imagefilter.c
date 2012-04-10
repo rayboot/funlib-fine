@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <jni.h>
 #include <android/log.h>
+
+#ifdef __HIGHER_SDK__
 #include <android/bitmap.h>
+#endif
 
 #define LOG_TAG "--imagefilter--"
 
@@ -308,15 +311,7 @@ jintArray JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapL
     return resultBitmapMemory;    
 }
 
-static int rgb_clamp(int value) {
-  if(value > 255) {
-    return 255;
-  }
-  if(value < 0) {
-    return 0;
-  }
-  return value;
-}
+#ifdef __HIGHER_SDK__
 int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapHigher(    
         JNIEnv* env, jobject obj, int effectType , jobject src , jobject mask , jobject result ,  float maskAlpha) { 
 
@@ -335,6 +330,7 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapHigher(
 	uint32_t* srcLine;
 	uint32_t* maskLine;
 	uint32_t* resultLine;
+	int alpha = 0xFF << 24;
 
 	if ((ret = AndroidBitmap_getInfo(env, src, &srcInfo)) < 0) {
 		return -1;
@@ -378,11 +374,11 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapHigher(
 			resultR = effectFun_options[effectType](srcR , maskR , maskAlpha);
 			resultG = effectFun_options[effectType](srcG , maskG , maskAlpha);
 			resultB = effectFun_options[effectType](srcB , maskB , maskAlpha);
-			resultLine[x] = ((srcR << 16) & 0x00FF0000) |((srcG << 8) & 0x0000FF00) |(srcB & 0x000000FF);
+			resultLine[x] = alpha | (resultR << 16) | (resultG << 8) | resultB;
     	}
     	
     	srcPixel = (char*)srcPixel + srcInfo.stride;
-    	maskPixel = (char*)maskPixel + srcInfo.stride;
+    	maskPixel = (char*)maskPixel + maskInfo.stride;
     	resultPixel = (char*)resultPixel + resultInfo.stride;
     }
 
@@ -391,3 +387,5 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapHigher(
 	AndroidBitmap_unlockPixels(env, result);
 	return 0;
 }
+#endif
+
