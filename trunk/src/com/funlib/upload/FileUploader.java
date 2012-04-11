@@ -1,20 +1,10 @@
 package com.funlib.upload;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
@@ -23,13 +13,7 @@ import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
-import android.text.TextUtils;
 
-import com.funlib.httputily.HttpUtily;
-import com.funlib.log.FLog;
-import com.funlib.network.NetWork;
 import com.funlib.upload.CustomMultiPartEntity.ProgressListener;
 
 /**

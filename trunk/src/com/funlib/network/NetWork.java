@@ -212,11 +212,16 @@ public class NetWork {
         if(cr != null && cr.moveToFirst()){
         	
         	sDefaultApnNode = new NetWork(). new ApnNode();
-        	sDefaultApnNode.apnType = cr.getString(cr.getColumnIndex("user"));
-        	sDefaultApnNode.proxy =  cr.getString(cr.getColumnIndex("proxy"));
-        	int index = cr.getColumnIndex("port");
-        	if(index != -1)
-        		sDefaultApnNode.port = cr.getInt(index);
+        	try {
+				
+        		sDefaultApnNode.apnType = cr.getString(cr.getColumnIndex("user"));
+            	sDefaultApnNode.proxy =  cr.getString(cr.getColumnIndex("proxy"));
+            	int index = cr.getColumnIndex("port");
+            	if(index != -1)
+            		sDefaultApnNode.port = cr.getInt(index);
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
         }
         
 		return sDefaultApnNode;

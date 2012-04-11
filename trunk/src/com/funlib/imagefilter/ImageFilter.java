@@ -1,8 +1,5 @@
 package com.funlib.imagefilter;
 
-import com.funlib.log.FLog;
-
-import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
