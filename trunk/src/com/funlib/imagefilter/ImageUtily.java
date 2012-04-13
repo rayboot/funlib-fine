@@ -1,8 +1,10 @@
 package com.funlib.imagefilter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -277,189 +279,18 @@ public class ImageUtily {
 		}
 		return bitmap;
 	}
-
-	/**
-	 * 给图片添加指定宽高的黑色背景框
-	 * 
-	 * @param bitmap
-	 * @param bgW
-	 * @param bgH
-	 * @return
-	 */
-	public static Bitmap addBitmapWhiteBG(Bitmap bitmap, int bgW, int bgH) {
-
-		try {
-
-			int x = 0;
-			int y = 0;
-			int bmpW = bitmap.getWidth();
-			int bmpH = bitmap.getHeight();
-			if (bgW > bgH)
-				bgH = bgW;
-			if (bgW < bgH)
-				bgW = bgH;
-			x = (bgW - bmpW) / 2;
-			y = (bgH - bmpH) / 2;
-
-			Bitmap output = Bitmap.createBitmap(bgW, bgH, Config.RGB_565);
-			Canvas canvas = new Canvas(output);
-			final Paint paint = new Paint();
-			paint.setAntiAlias(true);
-			canvas.drawARGB(255, 255, 255, 255);
-			canvas.drawBitmap(bitmap, x, y, paint);
-			return output;
-		} catch (Exception e) {
-			return bitmap;
-		}
-	}
-
-	/**
-	 * 解析出图片的宽高
-	 * 
-	 * @param data
-	 * @return
-	 */
-	public static PointF getBitmapBounds(byte[] data) {
-
-		PointF pf = new PointF();
-		BitmapFactory.Options opt = new BitmapFactory.Options();
-		opt.inJustDecodeBounds = true;
-		BitmapFactory.decodeByteArray(data, 0, data.length, opt);
-		pf.x = opt.outWidth;
-		pf.y = opt.outHeight;
-
-		return pf;
-	}
-
-	public static byte[] getResizedImageData(byte[] data, int srcWidth,
-			int srcHeight, int widthLimit, int heightLimit) {
-		int outWidth = srcWidth;
-		int outHeight = srcHeight;
-		int s = 1;
-		while ((outWidth / s > widthLimit) || (outHeight / s > heightLimit)) {
-			s *= 2;
-		}
-		// 先设置选项
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		// returning a smaller image to save memory.
-		options.inSampleSize = s;
-		Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-		if (b == null) {
-			return null;
-		}
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		b.compress(CompressFormat.JPEG, 100, os);
-		if (b != null && b.isRecycled() == false && b.isMutable()) {
-
-			b.recycle();
-			b = null;
-		}
-		return os.toByteArray();
-	}
-
-	public static Bitmap decodeFileBitmap(String filePath, int fixSize) {
-
-		Bitmap bmp = null;
-
-		int scale = 1;
-		if (fixSize != -1) {
-
-			BitmapFactory.Options o = new BitmapFactory.Options();
-			o.inJustDecodeBounds = true;
-			BitmapFactory.decodeFile(filePath, o);
-			// The new size we want to scale to
-			// Find the correct scale value. It should be the power of 2.
-			while (o.outWidth / scale / 2 >= fixSize
-					&& o.outHeight / scale / 2 >= fixSize)
-				scale *= 2;
-		}
-		// Decode with inSampleSize
-		BitmapFactory.Options o2 = new BitmapFactory.Options();
-		o2.inSampleSize = scale;
-		bmp = BitmapFactory.decodeFile(filePath, o2);
-
-		return bmp;
-	}
-
-	/**
-	 * 创建等比缩放图片
-	 * 
-	 * @param src
-	 * @param targetW
-	 * @param targetH
-	 * @return
-	 */
-	public static Bitmap createProportionCompressBitmap(Context context , Bitmap src, int targetW,
-			int targetH , int quality) {
-
-		if (src == null)
-			return src;
-
-		final String TMP_FILE_NAME = "tmpcompress.jpg";
-		int srcWidth = src.getWidth();
-		int srcHeight = src.getHeight();
-		double rate1 = ((double) srcWidth) / (double) targetW + 0.1;
-		double rate2 = ((double) srcHeight) / (double) targetH + 0.1;
-		// 根据缩放比率大的进行缩放控制
-		double rate = rate1 > rate2 ? rate1 : rate2;
-		int newWidth = (int) (((double) srcWidth) / rate);
-		int newHeight = (int) (((double) srcHeight) / rate);
-
-		Bitmap tmpBitmap = Bitmap.createScaledBitmap(src, newWidth, newHeight, true);
-		try {
-			
-		 	FileOutputStream fos = context.openFileOutput(TMP_FILE_NAME, Context.MODE_PRIVATE);
-		 	tmpBitmap.compress(CompressFormat.JPEG, quality, fos);
-		 	fos.close();
-
-		 	if(tmpBitmap != null && !tmpBitmap.isRecycled()){
-		 		tmpBitmap.recycle();
-		 	}
-		 	FileInputStream fis = context.openFileInput(TMP_FILE_NAME);
-		 	tmpBitmap = BitmapFactory.decodeStream(fis);
-		 	fis.close();
-		 	context.deleteFile(TMP_FILE_NAME);
-		 	return tmpBitmap;
-		}catch (OutOfMemoryError e) {
-			// TODO: handle exception
-		}catch (Exception e) {
-			// TODO: handle exception
-		}
-		
-		return null;
+	
+	public static Bitmap scaleBitmapFromByte(byte[] datas,
+			int width, int height) {
+		return MyThumbnailUtils.scaleBitmapFromByte(datas, width, height);
 	}
 	
-	public static Bitmap scaleBitmapToSize(Context context , Bitmap bitmap , int targetW , int targetH , int quality){
-		
-		final String TMP_FILE_NAME = "tmpcompress.jpg";
-		try {
-			
-			int bitmapWidth = bitmap.getWidth();
-			int bitmapHeight = bitmap.getHeight();
-			float scaleWidth = (float) targetW / bitmapWidth;
-			float scaleHeight = (float) targetH / bitmapHeight;
-			Matrix matrix = new Matrix();
-			matrix.postScale(scaleWidth, scaleHeight);
-			Bitmap tmpBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmapWidth, bitmapHeight, matrix, false);
-			FileOutputStream fos = context.openFileOutput(TMP_FILE_NAME, Context.MODE_PRIVATE);
-			tmpBitmap.compress(CompressFormat.JPEG, quality, fos);
-		 	fos.close();
-
-		 	if(tmpBitmap != null && !tmpBitmap.isRecycled()){
-		 		tmpBitmap.recycle();
-		 	}
-		 	FileInputStream fis = context.openFileInput(TMP_FILE_NAME);
-		 	tmpBitmap = BitmapFactory.decodeStream(fis);
-		 	fis.close();
-		 	context.deleteFile(TMP_FILE_NAME);
-		 	return tmpBitmap;
-		 	
-		}catch (OutOfMemoryError e) {
-			// TODO: handle exception
-		}catch (Exception e) {
-			// TODO: handle exception
-		}
-		
-		return null;
+	public static Bitmap scaleBitmapFromFile(String filePath,
+			int width, int height) {
+		return MyThumbnailUtils.scaleBitmapFromFile(filePath, width, height);
+	}
+	
+	public static Bitmap scaleBitmapFromBitmap(Bitmap source, int width, int height) {
+		return MyThumbnailUtils.scaleBitmapFromBitmap(source, width, height);
 	}
 }
