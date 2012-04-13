@@ -73,7 +73,6 @@ public class MyThumbnailUtils {
 			options.inSampleSize = computeSampleSize(options, targetSize,
 					maxPixels);
 			options.inJustDecodeBounds = false;
-
 			options.inDither = false;
 			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 			bitmap = BitmapFactory.decodeFileDescriptor(fd, null, options);
