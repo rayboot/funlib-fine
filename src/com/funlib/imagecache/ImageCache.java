@@ -12,7 +12,6 @@ import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -23,6 +22,7 @@ import android.widget.ImageView;
 
 import com.funlib.basehttprequest.BaseHttpRequest;
 import com.funlib.file.FileUtily;
+import com.funlib.imagefilter.ImageUtily;
 
 /**
  * 图片缓存
@@ -167,9 +167,21 @@ public class ImageCache {
 	 * 
 	 * @return
 	 */
-	private Bitmap lookupInMemory(String imgUrl) {
+	private Bitmap lookupInMemory(String imgUrl, final int targetW , final int targetH) {
 
-		return getBitmap(imgUrl);
+		Bitmap bmp = getBitmap(imgUrl);
+		if(targetH != 0 && targetW != 0){
+		
+			if(bmp != null){
+				int bmpW = bmp.getWidth();
+				int bmpH = bmp.getHeight();
+				if(bmpW != targetW || bmpH != targetH){
+					return null;
+				}
+			}
+		}
+		
+		return bmp;
 	}
 
 	/**
@@ -177,13 +189,24 @@ public class ImageCache {
 	 * 
 	 * @return
 	 */
-	private Bitmap lookupInFiles(String imgUrl) {
+	private Bitmap lookupInFiles(String imgUrl, final int targetW , final int targetH) {
 
 		try {
 
 			String filePath = sImageCachePath + hashString(imgUrl);
-			byte[] bytes = FileUtily.getBytes(filePath);
-			return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+			Bitmap bmp = ImageUtily.scaleBitmapFromFile(filePath, targetW, targetW);
+			if(targetH != 0 && targetW != 0){
+				
+				if(bmp != null){
+					int bmpW = bmp.getWidth();
+					int bmpH = bmp.getHeight();
+					if(bmpW != targetW || bmpH != targetH){
+						return null;
+					}
+				}
+			}
+			
+			return bmp;
 		} catch (OutOfMemoryError e) {
 
 		} catch (Exception e) {
@@ -234,23 +257,23 @@ public class ImageCache {
 	 */
 	public Bitmap cacheImage(Context context,
 			final ImageCacheListener listener, final Object target,
-			final String imgUrl, final List<NameValuePair> params) {
+			final String imgUrl, final int targetW , final int targetH , final List<NameValuePair> params) {
 
 		this.mContext = context;
 
 		Bitmap resultBmp = null;
 		// find memory
-		resultBmp = lookupInMemory(imgUrl);
+		resultBmp = lookupInMemory(imgUrl , targetW , targetH);
 		if (resultBmp != null)
 			return resultBmp;
 
 		// find files
-		resultBmp = lookupInFiles(imgUrl);
+		resultBmp = lookupInFiles(imgUrl , targetW , targetH);
 		if (resultBmp != null)
 			return resultBmp;
 		try {
 			
-			new ImageCacheTask().execute(listener , target , imgUrl , params);
+			new ImageCacheTask().execute(listener , target , imgUrl , targetW , targetH , params);
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
@@ -263,6 +286,8 @@ public class ImageCache {
 		private ImageCacheListener listener;
 		private Object target;
 		private String imgUrl;
+		private int targetW;
+		private int targetH;
 		private List<NameValuePair> requestParams;
 		
 		@Override
@@ -272,22 +297,32 @@ public class ImageCache {
 			listener = (ImageCacheListener) params[0];
 			target = params[1];
 			imgUrl = (String)params[2];
-			requestParams = (List<NameValuePair>) params[3];
+			targetW = (Integer)params[3];
+			targetH = (Integer)params[4];
+			requestParams = (List<NameValuePair>) params[5];
 			
 			Bitmap resultBmp = null;
-			byte[] bmpBytes = featchBitmap(imgUrl);
-			if (bmpBytes != null) {
-
-				try {
-
-					resultBmp = BitmapFactory.decodeByteArray(bmpBytes, 0,bmpBytes.length);
-					// 存储图片
-					storeCachedBitmap(imgUrl, resultBmp, bmpBytes);
-				} catch (OutOfMemoryError e) {
-					// TODO: handle exception
+			try {
+				
+				if(imgUrl.startsWith("http")){
+					
+					byte[] bmpBytes = featchBitmap(imgUrl);
+					if(bmpBytes != null)
+						resultBmp = ImageUtily.scaleBitmapFromByte(bmpBytes, targetW, targetH);
+					bmpBytes = null;
+				}else{
+					
+					resultBmp = ImageUtily.scaleBitmapFromFile(imgUrl, targetW, targetH);
 				}
+			} catch (OutOfMemoryError e) {
+				// TODO: handle exception
+			}catch (Exception e) {
+				// TODO: handle exception
 			}
-			bmpBytes = null;
+			
+			if(resultBmp != null){
+				storeCachedBitmap(imgUrl, resultBmp, ImageUtily.bitmap2Byte(resultBmp));
+			}
 			return resultBmp;
 		}
 
