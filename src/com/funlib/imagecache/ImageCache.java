@@ -12,6 +12,7 @@ import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -167,20 +168,9 @@ public class ImageCache {
 	 * 
 	 * @return
 	 */
-	private Bitmap lookupInMemory(String imgUrl, final int targetW , final int targetH) {
+	private Bitmap lookupInMemory(String imgUrl) {
 
 		Bitmap bmp = getBitmap(imgUrl);
-		if(targetH != 0 && targetW != 0){
-		
-			if(bmp != null){
-				int bmpW = bmp.getWidth();
-				int bmpH = bmp.getHeight();
-				if(bmpW != targetW || bmpH != targetH){
-					return null;
-				}
-			}
-		}
-		
 		return bmp;
 	}
 
@@ -189,23 +179,12 @@ public class ImageCache {
 	 * 
 	 * @return
 	 */
-	private Bitmap lookupInFiles(String imgUrl, final int targetW , final int targetH) {
+	private Bitmap lookupInFiles(String imgUrl) {
 
 		try {
 
 			String filePath = sImageCachePath + hashString(imgUrl);
-			Bitmap bmp = ImageUtily.scaleBitmapFromFile(filePath, targetW, targetW);
-			if(targetH != 0 && targetW != 0){
-				
-				if(bmp != null){
-					int bmpW = bmp.getWidth();
-					int bmpH = bmp.getHeight();
-					if(bmpW != targetW || bmpH != targetH){
-						return null;
-					}
-				}
-			}
-			
+			Bitmap bmp = BitmapFactory.decodeFile(filePath);
 			return bmp;
 		} catch (OutOfMemoryError e) {
 
@@ -263,12 +242,11 @@ public class ImageCache {
 
 		Bitmap resultBmp = null;
 		// find memory
-		resultBmp = lookupInMemory(imgUrl , targetW , targetH);
+		resultBmp = lookupInMemory(imgUrl);
 		if (resultBmp != null)
 			return resultBmp;
-
 		// find files
-		resultBmp = lookupInFiles(imgUrl , targetW , targetH);
+		resultBmp = lookupInFiles(imgUrl);
 		if (resultBmp != null)
 			return resultBmp;
 		try {
