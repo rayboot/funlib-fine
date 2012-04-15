@@ -4,11 +4,16 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import com.funlib.log.FLog;
+
+import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Bitmap.Config;
 
 public class MyThumbnailUtils {
 	private static final int UNCONSTRAINED = -1;
@@ -60,25 +65,20 @@ public class MyThumbnailUtils {
 		int targetSize = Math.min(width, height);
 		int maxPixels = width * height;
 		Bitmap bitmap = null;
-		try {
-			FileDescriptor fd = new FileInputStream(filePath).getFD();
-			BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inSampleSize = 1;
-			options.inJustDecodeBounds = true;
-			BitmapFactory.decodeFileDescriptor(fd, null, options);
-			if (options.mCancel || options.outWidth == -1
-					|| options.outHeight == -1) {
-				return null;
-			}
-			options.inSampleSize = computeSampleSize(options, targetSize,
-					maxPixels);
-			options.inJustDecodeBounds = false;
-			options.inDither = false;
-			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-			bitmap = BitmapFactory.decodeFileDescriptor(fd, null, options);
-		} catch (IOException ex) {
-			ex.printStackTrace();
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inSampleSize = 1;
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(filePath, options);
+		if (options.mCancel || options.outWidth == -1
+				|| options.outHeight == -1) {
+			return null;
 		}
+		options.inSampleSize = computeSampleSize(options, targetSize,
+				maxPixels);
+		options.inJustDecodeBounds = false;
+		options.inDither = false;
+		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+		bitmap = BitmapFactory.decodeFile(filePath, options);
 
 		bitmap = extractThumbnail(bitmap, width, height, OPTIONS_RECYCLE_INPUT);
 		return bitmap;
@@ -188,82 +188,111 @@ public class MyThumbnailUtils {
 		boolean scaleUp = (options & OPTIONS_SCALE_UP) != 0;
 		boolean recycle = (options & OPTIONS_RECYCLE_INPUT) != 0;
 
-		int deltaX = source.getWidth() - targetWidth;
-		int deltaY = source.getHeight() - targetHeight;
-		if (!scaleUp && (deltaX < 0 || deltaY < 0)) {
-			/*
-			 * In this case the bitmap is smaller, at least in one dimension,
-			 * than the target. Transform it by placing as much of the image as
-			 * possible into the target and leaving the top/bottom or left/right
-			 * (or both) black.
-			 */
-			Bitmap b2 = Bitmap.createBitmap(targetWidth, targetHeight,
-					Bitmap.Config.ARGB_8888);
-			Canvas c = new Canvas(b2);
-
-			int deltaXHalf = Math.max(0, deltaX / 2);
-			int deltaYHalf = Math.max(0, deltaY / 2);
-			Rect src = new Rect(deltaXHalf, deltaYHalf, deltaXHalf
-					+ Math.min(targetWidth, source.getWidth()), deltaYHalf
-					+ Math.min(targetHeight, source.getHeight()));
-			int dstX = (targetWidth - src.width()) / 2;
-			int dstY = (targetHeight - src.height()) / 2;
-			Rect dst = new Rect(dstX, dstY, targetWidth - dstX, targetHeight
-					- dstY);
-			c.drawBitmap(source, src, dst, null);
-			if (recycle) {
-				source.recycle();
-			}
-			return b2;
+		int srcWidth = source.getWidth();
+		int srcHeight = source.getHeight();
+		double rate1 = ((double) srcWidth) / (double) targetWidth + 0.1;
+		double rate2 = ((double) srcHeight) / (double) targetHeight + 0.1;
+		// 根据缩放比率大的进行缩放控制
+		double rate = rate1 > rate2 ? rate1 : rate2;
+		int newWidth = (int) (((double) srcWidth) / rate);
+		int newHeight = (int) (((double) srcHeight) / rate);
+		Bitmap scaledBitmap = Bitmap.createScaledBitmap(source, newWidth, newHeight, false);
+		if(targetHeight != newHeight || targetWidth != newWidth){
+			
+			Rect srcRect = new Rect(0, 0, newWidth, newHeight);
+			int dstLeft = (targetWidth-newWidth)/2;
+			int dstTop = (targetHeight-newHeight)/2;
+			int dstRight = dstLeft + newWidth;
+			int dstBottom = dstTop + newHeight;
+			Rect dstRect = new Rect(dstLeft , dstTop , dstRight , dstBottom);
+			Bitmap tmpBitmap = Bitmap.createBitmap(targetWidth, targetHeight, Config.ARGB_8888);
+			Canvas canvas = new Canvas(tmpBitmap);
+			canvas.drawBitmap(scaledBitmap, srcRect, dstRect, new Paint());
+			canvas.save();
+			scaledBitmap.recycle();
+			scaledBitmap = tmpBitmap;
 		}
-		float bitmapWidthF = source.getWidth();
-		float bitmapHeightF = source.getHeight();
-
-		float bitmapAspect = bitmapWidthF / bitmapHeightF;
-		float viewAspect = (float) targetWidth / targetHeight;
-
-		if (bitmapAspect > viewAspect) {
-			float scale = targetHeight / bitmapHeightF;
-			if (scale < .9F || scale > 1F) {
-				scaler.setScale(scale, scale);
-			} else {
-				scaler = null;
-			}
-		} else {
-			float scale = targetWidth / bitmapWidthF;
-			if (scale < .9F || scale > 1F) {
-				scaler.setScale(scale, scale);
-			} else {
-				scaler = null;
-			}
-		}
-
-		Bitmap b1;
-		if (scaler != null) {
-			// this is used for minithumb and crop, so we want to filter here.
-			b1 = Bitmap.createBitmap(source, 0, 0, source.getWidth(),
-					source.getHeight(), scaler, true);
-		} else {
-			b1 = source;
-		}
-
-		if (recycle && b1 != source) {
+		if(recycle){
 			source.recycle();
 		}
-
-		int dx1 = Math.max(0, b1.getWidth() - targetWidth);
-		int dy1 = Math.max(0, b1.getHeight() - targetHeight);
-
-		Bitmap b2 = Bitmap.createBitmap(b1, dx1 / 2, dy1 / 2, targetWidth,
-				targetHeight);
-
-		if (b2 != b1) {
-			if (recycle || b1 != source) {
-				b1.recycle();
-			}
-		}
-
-		return b2;
+		return scaledBitmap;
+		
+//		int deltaX = source.getWidth() - targetWidth;
+//		int deltaY = source.getHeight() - targetHeight;
+//		if (!scaleUp && (deltaX < 0 || deltaY < 0)) {
+//			/*
+//			 * In this case the bitmap is smaller, at least in one dimension,
+//			 * than the target. Transform it by placing as much of the image as
+//			 * possible into the target and leaving the top/bottom or left/right
+//			 * (or both) black.
+//			 */
+//			Bitmap b2 = Bitmap.createBitmap(targetWidth, targetHeight,
+//					Bitmap.Config.ARGB_8888);
+//			Canvas c = new Canvas(b2);
+//
+//			int deltaXHalf = Math.max(0, deltaX / 2);
+//			int deltaYHalf = Math.max(0, deltaY / 2);
+//			Rect src = new Rect(deltaXHalf, deltaYHalf, deltaXHalf
+//					+ Math.min(targetWidth, source.getWidth()), deltaYHalf
+//					+ Math.min(targetHeight, source.getHeight()));
+//			int dstX = (targetWidth - src.width()) / 2;
+//			int dstY = (targetHeight - src.height()) / 2;
+//			Rect dst = new Rect(dstX, dstY, targetWidth - dstX, targetHeight
+//					- dstY);
+//			c.drawBitmap(source, src, dst, null);
+//			if (recycle) {
+//				source.recycle();
+//			}
+//			return b2;
+//		}
+//		float bitmapWidthF = source.getWidth();
+//		float bitmapHeightF = source.getHeight();
+//
+//		float bitmapAspect = bitmapWidthF / bitmapHeightF;
+//		float viewAspect = (float) targetWidth / targetHeight;
+//
+//		if (bitmapAspect > viewAspect) {
+//			float scale = targetHeight / bitmapHeightF;
+//			if (scale < .9F || scale > 1F) {
+//				scaler.setScale(scale, scale);
+//			} else {
+//				scaler = null;
+//			}
+//		} else {
+//			float scale = targetWidth / bitmapWidthF;
+//			if (scale < .9F || scale > 1F) {
+//				scaler.setScale(scale, scale);
+//			} else {
+//				scaler = null;
+//			}
+//		}
+//
+//		Bitmap b1;
+//		if (scaler != null) {
+//			// this is used for minithumb and crop, so we want to filter here.
+//			b1 = Bitmap.createBitmap(source, 0, 0, source.getWidth(),
+//					source.getHeight(), scaler, true);
+//		} else {
+//			b1 = source;
+//		}
+//
+//		if (recycle && b1 != source) {
+//			source.recycle();
+//		}
+//
+//		int dx1 = Math.max(0, b1.getWidth() - targetWidth);
+//		int dy1 = Math.max(0, b1.getHeight() - targetHeight);
+//
+//		Bitmap b2 = Bitmap.createBitmap(b1, dx1 / 2, dy1 / 2, targetWidth,
+//				targetHeight);
+//
+//		if (b2 != b1) {
+//			if (recycle || b1 != source) {
+//				b1.recycle();
+//			}
+//		}
+//
+//		return b2;
 	}
 
 }
