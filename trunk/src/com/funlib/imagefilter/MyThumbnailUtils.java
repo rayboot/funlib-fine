@@ -10,6 +10,7 @@ import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -199,18 +200,17 @@ public class MyThumbnailUtils {
 		Bitmap scaledBitmap = Bitmap.createScaledBitmap(source, newWidth, newHeight, false);
 		if(targetHeight != newHeight || targetWidth != newWidth){
 			
-			Rect srcRect = new Rect(0, 0, newWidth, newHeight);
-			int dstLeft = (targetWidth-newWidth)/2;
-			int dstTop = (targetHeight-newHeight)/2;
-			int dstRight = dstLeft + newWidth;
-			int dstBottom = dstTop + newHeight;
-			Rect dstRect = new Rect(dstLeft , dstTop , dstRight , dstBottom);
-			Bitmap tmpBitmap = Bitmap.createBitmap(targetWidth, targetHeight, Config.ARGB_8888);
-			Canvas canvas = new Canvas(tmpBitmap);
-			canvas.drawBitmap(scaledBitmap, srcRect, dstRect, new Paint());
-			canvas.save();
-			scaledBitmap.recycle();
-			scaledBitmap = tmpBitmap;
+//			Bitmap tmpBitmap = scaledBitmap.copy(scaledBitmap.getConfig(), true);
+//			tmpBitmap = ImageUtily.resizeBitmap(tmpBitmap, targetWidth, targetHeight);
+//			Canvas canvas = new Canvas(tmpBitmap);
+//			Paint paint = new Paint();
+//			paint.setColor(Color.WHITE);
+//			canvas.drawPaint(paint);
+//			int dstTop = (targetHeight - newHeight)/2;
+//			int dstLeft = (targetWidth - newWidth)/2;
+//			canvas.drawBitmap(scaledBitmap, dstLeft, dstTop, paint);
+//			scaledBitmap.recycle();
+//			scaledBitmap = tmpBitmap;
 		}
 		if(recycle){
 			source.recycle();
