@@ -1,5 +1,6 @@
 package com.funlib.imagefilter;
 
+import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -610,115 +611,15 @@ public class ImageFilter {
 		}
 	}
 
-	public enum EffectType {
-		ChannelBlend_Normal, 
-		ChannelBlend_Lighten, 
-		ChannelBlend_Darken, 
-		ChannelBlend_Multiply,
-		ChannelBlend_Average,
-		ChannelBlend_Add,
-		ChannelBlend_Subtract,
-		ChannelBlend_Difference,
-		ChannelBlend_Negation,
-		ChannelBlend_Screen,
-		ChannelBlend_Exclusion,
-		ChannelBlend_Overlay,
-		ChannelBlend_SoftLight,
-		ChannelBlend_HardLight,
-		ChannelBlend_ColorDodge,
-		ChannelBlend_ColorBurn,
-		ChannelBlend_LinearDodge,
-		ChannelBlend_LinearBurn,
-		ChannelBlend_LinearLight,
-		ChannelBlend_VividLight,
-		ChannelBlend_PinLight,
-		ChannelBlend_HardMix,
-		ChannelBlend_Reflect,
-		ChannelBlend_Glow,
-		ChannelBlend_Phoenix,
-		ChannelBlend_Devide,
-	}
-	
-	public static Bitmap ps_getEffectBitmap(EffectType iType, Bitmap src, Bitmap mask, float maskAlpha) {
-		int width = src.getWidth();
-		int height = src.getHeight();
-		int maskWidth = mask.getWidth();
-		int maskHeight = mask.getHeight();
-		Bitmap tmpMask = mask;
-		
-		if(maskWidth != width || maskHeight != height){
-			
-			tmpMask = ImageUtily.resizeBitmap(mask, width, height);
-		}
-		
-		String osVersion = android.os.Build.VERSION.SDK;
-		int numVersion = Integer.parseInt(osVersion);
-		Bitmap tmpBitmap = null;
-		if(numVersion < 8){
-			
-			try {
-				
-				int[] pixelsSrc = nativeAllocSrcBitmapMemory(width*height);
-				src.getPixels(pixelsSrc, 0, width, 0, 0, width, height);
-				int[] pixelsMask = nativeAllocMaskBitmapMemory(width*height);
-				tmpMask.getPixels(pixelsMask, 0, width, 0, 0, width, height);
-				
-				nativeAllocResultBitmapMemory(width*height);
-				int[] result = nativeGetEffectBitmapLower(iType.ordinal() , pixelsSrc, pixelsMask, maskAlpha , width, height);
-				
-				if(result != null){
-					tmpBitmap = Bitmap.createBitmap(width, height, Config.RGB_565);
-					tmpBitmap.setPixels(result, 0, width, 0, 0, width, height);
-				}
-			
-			} catch (Exception e) {
-				// TODO: handle exception
-			}
-
-			nativeFreeSrcBitmapMemory();
-			nativeFreeMaskBitmapMemory();
-			nativeFreeResultBitmapMemory();
-			
-			tmpMask.recycle();
-			tmpMask = null;
-			return tmpBitmap;
-		}else{
-			
-			tmpBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-			int ret = nativeGetEffectBitmapHigher(iType.ordinal(), src, tmpMask, tmpBitmap, maskAlpha);
-			if(ret != 0){
-				
-				tmpBitmap.recycle();
-				tmpBitmap = null;
-			}
-		}
-		
-		return tmpBitmap;
-	}
-	
 	static{
 		
 		try {
-			String osVersion = android.os.Build.VERSION.SDK;
-			int numVersion = Integer.parseInt(osVersion);
-			if(numVersion < 8){
 				System.loadLibrary("imagefilter");
-			}else{
-				System.loadLibrary("imagefilter1");
-			}
 			
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
 	}
-	private static native int[] nativeGetEffectBitmapLower(int type , int[] srcBuf, int[] maskBuf, float maskAlpha , int w, int h);
-	private static native int[] nativeAllocSrcBitmapMemory(int size);   
-	private static native void nativeFreeSrcBitmapMemory();   
-	private static native int[] nativeAllocMaskBitmapMemory(int size);   
-	private static native void nativeFreeMaskBitmapMemory();   
-	private static native void nativeAllocResultBitmapMemory(int size);   
-	private static native void nativeFreeResultBitmapMemory();   
 	
-	private static native int nativeGetEffectBitmapHigher(int type , Bitmap src , Bitmap mask, Bitmap result , float maskAlpha );
-	
+	public static native int nativeEffect1(int[] srcBuf, int[] matrixBuf, int w, int h);
 }

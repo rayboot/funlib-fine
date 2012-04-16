@@ -3,10 +3,6 @@
 #include <jni.h>
 #include <android/log.h>
 
-#ifdef __HIGHER_SDK__
-#include <android/bitmap.h>
-#endif
-
 #define LOG_TAG "--imagefilter--"
 
 #ifdef __DEBUG__
@@ -155,6 +151,7 @@ static __inline__ int ps_DevideFun(int src, int mask , float maskAlpha) {
 	return ((int) (maskAlpha * mask + (1 - maskAlpha) * src));
 }
 
+/*
 enum EffectType {
 		ChannelBlend_Normal=0, 
 		ChannelBlend_Lighten, 
@@ -213,179 +210,52 @@ EffectFun effectFun_options[] = {
 	&ps_PhoenixFun,
 	&ps_DevideFun
 };
+*/
 
-static jintArray resultBitmapMemory = NULL;
-void JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeAllocResultBitmapMemory(    
-        JNIEnv* env, jobject obj, int size) { 
-        
-    resultBitmapMemory = (*env)->NewGlobalRef(env , (*env)->NewIntArray(env , size));
+int clam(int value){
+
+	value = max(0,value);
+	value = min(255,value);
+	return value;
 }
 
-void JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeFreeResultBitmapMemory(    
-        JNIEnv* env, jobject obj) { 
+int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffect1(    
+        JNIEnv* env, jobject obj , jintArray srcBuf, jintArray matrixBuf , int w , int h) { 
         
-    if(resultBitmapMemory != NULL){
-    	
-    	(*env)->DeleteGlobalRef(env, resultBitmapMemory);
-    	resultBitmapMemory = NULL;
-    }
-}
-
-static jintArray srcBitmapMemory = NULL;
-jintArray JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeAllocSrcBitmapMemory(    
-        JNIEnv* env, jobject obj, int size) { 
-        
-    srcBitmapMemory = (*env)->NewGlobalRef(env , (*env)->NewIntArray(env , size));
-}
-
-void JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeFreeSrcBitmapMemory(    
-        JNIEnv* env, jobject obj) { 
-        
-    if(srcBitmapMemory != NULL){
-    	
-    	(*env)->DeleteGlobalRef(env, srcBitmapMemory);
-    	srcBitmapMemory = NULL;
-    }
-}
-
-static jintArray maskBitmapMemory = NULL;
-jintArray JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeAllocMaskBitmapMemory(    
-        JNIEnv* env, jobject obj, int size) { 
-        
-    maskBitmapMemory = (*env)->NewGlobalRef(env , (*env)->NewIntArray(env , size));
-}
-
-void JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeFreeMaskBitmapMemory(    
-        JNIEnv* env, jobject obj) { 
-        
-    if(maskBitmapMemory != NULL){
-    	
-    	(*env)->DeleteGlobalRef(env, maskBitmapMemory);
-    	maskBitmapMemory = NULL;
-    }
-}
-        
-jintArray JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapLower(    
-        JNIEnv* env, jobject obj, int effectType , jintArray srcBuf,jintArray maskBuf, float maskAlpha, int w, int h) { 
-    
-    jint *srcTmpBuf = (*env)->GetIntArrayElements(env , srcBuf, 0);    
-    jint *maskTmpBuf = (*env)->GetIntArrayElements(env , maskBuf, 0);    
+    jint *srcTmpBuf = (*env)->GetIntArrayElements(env , srcBuf, 0);  
+    jint *matrixTmpBuf = (*env)->GetIntArrayElements(env , matrixBuf, 0);   
     int alpha = 0xFF << 24;
     int i = 0;
     int j = 0;
-    int size = w * h;   
+    int index = 0;
+    int rgb;
+    int a;
+    int r,g,b;
+    int nr,ng,nb;
     
-    if (srcTmpBuf == NULL || maskTmpBuf == NULL) {    
-        return NULL;  
+    if (srcTmpBuf == NULL) {    
+        return -1;  
     }
     
-    for (i = 0; i < h; i++) {  
-        for (j = 0; j < w; j++) {    
-        
-            int srcColor = srcTmpBuf[w * i + j];    
-            int maskColor = maskTmpBuf[w * i + j];    
-            
-            //int srcAlpha = srcColor & 0x000000ff;
-            //int maskAlpha = maskColor & 0x000000ff;
-            
-            int srcRed = ((srcColor & 0x00FF0000) >> 16);    
-            int maskRed = ((maskColor & 0x00FF0000) >> 16);
-            srcRed = effectFun_options[effectType](srcRed , maskRed , maskAlpha);
-            
-            int srcGreen = ((srcColor & 0x0000FF00) >> 8);   
-            int maskGreen = ((maskColor & 0x0000FF00) >> 8);  
-            srcGreen = effectFun_options[effectType](srcGreen , maskGreen , maskAlpha);
-            
-            int srcBlue = srcColor & 0x000000FF;
-            int maskBlue = maskColor & 0x000000FF;
-            srcBlue = effectFun_options[effectType](srcBlue , maskBlue , maskAlpha);
-            
-            srcTmpBuf[w * i + j] = alpha | (srcRed << 16) | (srcGreen << 8) | srcBlue;    
-        }    
-    }    
-
-    (*env)->SetIntArrayRegion(env , resultBitmapMemory, 0, size, srcTmpBuf);
-    (*env)->ReleaseIntArrayElements(env , srcBuf, srcTmpBuf, 0);    
-    (*env)->ReleaseIntArrayElements(env , maskBuf, maskTmpBuf, 0);    
-    
-    return resultBitmapMemory;    
-}
-
-#ifdef __HIGHER_SDK__
-int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeGetEffectBitmapHigher(    
-        JNIEnv* env, jobject obj, int effectType , jobject src , jobject mask , jobject result ,  float maskAlpha) { 
-
-	AndroidBitmapInfo  srcInfo;
-	AndroidBitmapInfo  maskInfo;
-	AndroidBitmapInfo  resultInfo;
-	void* srcPixel;
-	void* maskPixel;
-	void* resultPixel;
-	int ret;
-	int x , y;
-	int w , h;
-	int srcR , srcG , srcB;
-	int maskR , maskG , maskB;
-	int resultR , resultG , resultB;
-	uint32_t* srcLine;
-	uint32_t* maskLine;
-	uint32_t* resultLine;
-	int alpha = 0xFF << 24;
-
-	if ((ret = AndroidBitmap_getInfo(env, src, &srcInfo)) < 0) {
-		return -1;
-     }
-     if ((ret = AndroidBitmap_getInfo(env, mask, &maskInfo)) < 0) {
-		return -1;
-     }
-     if ((ret = AndroidBitmap_getInfo(env, result, &resultInfo)) < 0) {
-		return -1;
-     }
-     
-     if ((ret = AndroidBitmap_lockPixels(env, src, &srcPixel)) < 0) {
-     	return -1;
-    }
-    if ((ret = AndroidBitmap_lockPixels(env, mask, &maskPixel)) < 0) {
-    	AndroidBitmap_unlockPixels(env, src);
-     	return -1;
-    }
-    if ((ret = AndroidBitmap_lockPixels(env, result, &resultPixel)) < 0) {
-    	AndroidBitmap_unlockPixels(env, src);
-		AndroidBitmap_unlockPixels(env, mask);
-     	return -1;
-    }
-    
-    w = srcInfo.width;
-    h = srcInfo.height;
-    for(y = 0 ; y < h ; ++y){
-    
-    	srcLine = (uint32_t*)srcPixel;
-    	maskLine = (uint32_t*)maskPixel;
-    	resultLine = (uint32_t*)resultPixel;
-    	for(x = 0 ; x < w ; ++x){
-
-    		srcR = (int) ((srcLine[x] & 0x00FF0000) >> 16);
-			srcG = (int)((srcLine[x] & 0x0000FF00) >> 8);
-			srcB = (int) (srcLine[x] & 0x00000FF );
-			maskR = (int) ((maskLine[x] & 0x00FF0000) >> 16);
-			maskG = (int)((maskLine[x] & 0x0000FF00) >> 8);
-			maskB = (int) (maskLine[x] & 0x00000FF );
-			
-			resultR = effectFun_options[effectType](srcR , maskR , maskAlpha);
-			resultG = effectFun_options[effectType](srcG , maskG , maskAlpha);
-			resultB = effectFun_options[effectType](srcB , maskB , maskAlpha);
-			resultLine[x] = alpha | (resultR << 16) | (resultG << 8) | resultB;
-    	}
+    for(i = 0 ; i < h ; ++i){
+    	for(j = 0 ; j < w ; ++j){
     	
-    	srcPixel = (char*)srcPixel + srcInfo.stride;
-    	maskPixel = (char*)maskPixel + maskInfo.stride;
-    	resultPixel = (char*)resultPixel + resultInfo.stride;
-    }
+				index = w * i + j;
+				rgb = srcTmpBuf[index];    
+				a = rgb >> 24 & 0xFF;
+    			r = rgb >> 16 & 0xFF;
+    			g = rgb >> 8 & 0xFF;
+    			b = rgb & 0xFF;
+				            
+    			a = matrixTmpBuf[0] * a + matrixTmpBuf[1] * r + matrixTmpBuf[2] * g + matrixTmpBuf[3] * b + matrixTmpBuf[4] * 255;
+    			r = matrixTmpBuf[5] * a + matrixTmpBuf[6] * r + matrixTmpBuf[7] * g + matrixTmpBuf[8] * b + matrixTmpBuf[9] * 255;
+    			g = matrixTmpBuf[10] * a + matrixTmpBuf[11] * r + matrixTmpBuf[12] * g + matrixTmpBuf[13] * b + matrixTmpBuf[14] * 255;
+    			b = matrixTmpBuf[15] * a + matrixTmpBuf[16] * r + matrixTmpBuf[17] * g + matrixTmpBuf[18] * b + matrixTmpBuf[19] * 255;
+				srcTmpBuf[index] =  a << 24 | r << 16 | g << 8 | b; 
+			}
+	}
 
-	AndroidBitmap_unlockPixels(env, src);
-	AndroidBitmap_unlockPixels(env, mask);
-	AndroidBitmap_unlockPixels(env, result);
-	return 0;
+    (*env)->ReleaseIntArrayElements(env , srcBuf, srcTmpBuf, 0);
+    (*env)->ReleaseIntArrayElements(env , matrixBuf, matrixTmpBuf, 0);       
+    return 0;    
 }
-#endif
-
