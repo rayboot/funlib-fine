@@ -621,5 +621,7 @@ public class ImageFilter {
 		}
 	}
 	
-	public static native int nativeEffect1(int[] srcBuf, int[] matrixBuf, int w, int h);
+	public static native int nativeEffectColorMatrix(int[] srcBuf, int[] matrixBuf, int w, int h);
+	public static native int nativeEffectSketch(int[] srcBuf,int w, int h);
+	public static native int nativeEffectEmboss(int[] srcBuf,int w, int h);
 }

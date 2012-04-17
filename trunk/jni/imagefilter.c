@@ -212,14 +212,20 @@ EffectFun effectFun_options[] = {
 };
 */
 
-int clam(int value){
+static __inline__ int clamRGB(int rgb){
 
-	value = max(0,value);
-	value = min(255,value);
-	return value;
+	rgb = max(0,rgb);
+	return min(255,rgb);
 }
 
-int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffect1(    
+//反相
+static __inline__ int invertRGB(int rgb){
+
+	int a = rgb & 0xff000000;
+	return a | (~rgb & 0x00ffffff);
+}
+
+int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectColorMatrix(    
         JNIEnv* env, jobject obj , jintArray srcBuf, jintArray matrixBuf , int w , int h) { 
         
     jint *srcTmpBuf = (*env)->GetIntArrayElements(env , srcBuf, 0);  
@@ -251,11 +257,112 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffect1(
     			r = matrixTmpBuf[5] * a + matrixTmpBuf[6] * r + matrixTmpBuf[7] * g + matrixTmpBuf[8] * b + matrixTmpBuf[9] * 255;
     			g = matrixTmpBuf[10] * a + matrixTmpBuf[11] * r + matrixTmpBuf[12] * g + matrixTmpBuf[13] * b + matrixTmpBuf[14] * 255;
     			b = matrixTmpBuf[15] * a + matrixTmpBuf[16] * r + matrixTmpBuf[17] * g + matrixTmpBuf[18] * b + matrixTmpBuf[19] * 255;
+    			
+    			a = clamRGB(a);
+    			r = clamRGB(r);
+    			g = clamRGB(g);
+    			b = clamRGB(b);
 				srcTmpBuf[index] =  a << 24 | r << 16 | g << 8 | b; 
 			}
 	}
 
     (*env)->ReleaseIntArrayElements(env , srcBuf, srcTmpBuf, 0);
     (*env)->ReleaseIntArrayElements(env , matrixBuf, matrixTmpBuf, 0);       
+    return 0;    
+}
+
+int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectSketch(    
+        JNIEnv* env, jobject obj , jintArray srcBuf,int w , int h) { 
+        
+    jint *srcTmpBuf = (*env)->GetIntArrayElements(env , srcBuf, 0);  
+    int alpha = 0xFF << 24;
+    int i = 0;
+    int j = 0;
+    int index = 0;
+    int srcSize = (*env)->GetArrayLength(env , srcBuf);
+    
+    if (srcTmpBuf == NULL) {    
+        return -1;  
+    }
+    
+    jintArray maskBuf = (*env)->NewIntArray(env , srcSize);
+    if(maskBuf == NULL){
+    	(*env)->ReleaseIntArrayElements(env , srcBuf, srcTmpBuf, 0);
+    	return -1;
+    }
+    (*env)->SetIntArrayRegion(env, maskBuf, 0, srcSize, srcBuf);
+    jint *maskTmpBuf = (*env)->GetIntArrayElements(env , maskBuf, 0);  
+    for(i = 0 ; i < h ; ++i){
+    	for(j = 0 ; j < w ; ++j){
+    	
+				index = w * i + j;
+				int rgb1 = maskTmpBuf[index];
+				int rgb2 =  srcTmpBuf[index];   
+				rgb1 = invertRGB(rgb1);
+				
+				int a1 = rgb1 >> 24 & 0xFF;
+    			int r1 = rgb1 >> 16 & 0xFF;
+    			int g1 = rgb1 >> 8 & 0xFF;
+    			int b1 = rgb1 & 0xFF;
+    			
+    			int a2 = rgb2 >> 24 & 0xFF;
+    			int r2 = rgb2 >> 16 & 0xFF;
+    			int g2 = rgb2 >> 8 & 0xFF;
+    			int b2 = rgb2 & 0xFF;
+    			
+    			r2 = ps_ColorDodgeFun(r2 , r1 , 0);
+    			g2 = ps_ColorDodgeFun(g2 , g1 , 0);
+    			b2 = ps_ColorDodgeFun(b2 , b1 , 0);
+				            
+				a2 = clamRGB(a2);
+				r2 = clamRGB(r2);
+				g2 = clamRGB(g2);
+				b2 = clamRGB(b2);
+				srcTmpBuf[index] =  a2 << 24 | r2 << 16 | g2 << 8 | b2; 
+			}
+	}
+
+	(*env)->ReleaseIntArrayElements(env , maskBuf, maskTmpBuf, 0);
+	(*env)->DeleteLocalRef(env,maskBuf);
+    (*env)->ReleaseIntArrayElements(env , srcBuf, srcTmpBuf, 0);
+    return 0;
+}
+
+int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectEmboss(    
+        JNIEnv* env, jobject obj , jintArray srcBuf , int w , int h) { 
+        
+    jint *srcTmpBuf = (*env)->GetIntArrayElements(env , srcBuf, 0);  
+    int alpha = 0xFF << 24;
+    int i = 0;
+    int j = 0;
+    int index = 0;
+    int rgb1,rgb2;
+    int a;
+    int r,g,b;
+    
+    if (srcTmpBuf == NULL) {    
+        return -1;  
+    }
+    
+    for(i = 1 ; i < h - 1 ; ++i){
+    	for(j = 1 ; j < w - 1 ; ++j){
+    	
+				index = w * i + j;
+				rgb1 = srcTmpBuf[index];    
+				rgb2 = srcTmpBuf[index+1];    
+				a = rgb1 >> 24 & 0xFF;
+    			r = rgb2 >> 16 & 0xFF - rgb1 >> 16 & 0xFF + 127;
+    			g = rgb2 >> 8 & 0xFF - rgb1 >> 8 & 0xFF + 127;
+    			b = rgb2 & 0xFF - rgb1 & 0xFF + 127;
+				            
+    			a = clamRGB(a);
+    			r = clamRGB(r);
+    			g = clamRGB(g);
+    			b = clamRGB(b);
+				srcTmpBuf[index] =  a << 24 | r << 16 | g << 8 | b; 
+			}
+	}
+
+    (*env)->ReleaseIntArrayElements(env , srcBuf, srcTmpBuf, 0);
     return 0;    
 }

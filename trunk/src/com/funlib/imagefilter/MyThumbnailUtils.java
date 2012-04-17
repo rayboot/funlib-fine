@@ -1,20 +1,8 @@
 package com.funlib.imagefilter;
 
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.IOException;
-
-import com.funlib.log.FLog;
-
-import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Bitmap.Config;
 
 public class MyThumbnailUtils {
 	private static final int UNCONSTRAINED = -1;
