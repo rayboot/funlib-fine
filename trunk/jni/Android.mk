@@ -15,11 +15,17 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+include $(call all-subdir-makefiles)
+
+LOCAL_C_INCLUDES += /Users/feng/Documents/android-ndk-r7b/sources/cxx-stl/stlport/stlport
+APP_STL := stlport_static
 
 LOCAL_MODULE    := imagefilter
-LOCAL_SRC_FILES := imagefilter.c
+LOCAL_SRC_FILES := curve.cpp imagefilter.cpp
 
 LOCAL_LDLIBS    := -llog
 LOCAL_CFLAGS += -D__DEBUG__ 
+
+LOCAL_LDLIBS += /Users/feng/Documents/android-ndk-r7b/sources/cxx-stl/stlport/libs/armeabi/libstlport_static.a
 
 include $(BUILD_SHARED_LIBRARY)
