@@ -26,4 +26,8 @@ public class ImageFilter {
 	public static native int nativeEffectAdjustGamma(int[] srcBuf , float value , int w , int h);/** value[9.99-0.01] **/
 	
 	public static native int nativeEffectLOMO1(int[] srcBuf , int[] maskBuf , int w , int h);
+	
+	public static native int nativeEffectSunShine(int[] srcBuf , int w , int h , int centerX, int centerY, int radius, int strength);
+	public static native int nativeEffectFangDaJing(int[] srcBuf , int width, int height,int centerX, int centerY, int radius, float multiple);
+	public static native int nativeEffectHaHaJing(int[] srcBuf , int width, int height,int centerX, int centerY, int radius, float multiple);
 }
