@@ -214,10 +214,31 @@ EffectFun effectFun_options[] = {
 };
 */
 
-static __inline__ int clamRGB(int rgb){
+static __inline__ int clamp(int rgb){
 
 	rgb = max(0,rgb);
 	return min(255,rgb);
+}
+
+static __inline__ int ALPHA(int rgb){
+	return rgb >> 24 & 0xff;
+}
+static __inline__ int RED(int rgb){
+	return rgb >> 16 & 0xff;
+}
+static __inline__ int GREEN(int rgb){
+	return rgb >> 8 & 0xff;
+}
+static __inline__ int BLUE(int rgb){
+	return rgb & 0xff;
+}
+static __inline__ int ARGB(int a , int r , int g , int b){
+	a = clamp(a);
+	r = clamp(r);
+	g = clamp(g);
+	b = clamp(b);
+	
+	return 	a << 24 | r << 16 | g << 8 | b;
 }
 
 //反相
@@ -230,11 +251,11 @@ static __inline__ int invertRGB(int rgb){
 //grayscale
 static __inline__ int grayScale(int rgb){
 	
-	int a = rgb >> 24 & 0xFF;
-    int r = rgb >> 16 & 0xFF;
-    int g = rgb >> 8 & 0xFF;
-    int b = rgb & 0xFF;
-	return (r * 77 + g * 151 + b * 28) >> 8;
+	int a = ALPHA(rgb);
+    int r = RED(rgb);
+    int g = GREEN(rgb);
+    int b = BLUE(rgb);
+	return (r * 0.3 + g * 0.59 + b * 0.11);
 }
 
 //高斯模糊
@@ -257,10 +278,10 @@ static __inline__ void gaussianBlur(jint* rgbBuf , int w , int h, int radius){
 				{
 					index = w*(y+j) + x + i;
 					rgb = rgbBuf[index];
-					a = rgb >> 24 & 0xFF;
-					sumr += rgb >> 16 & 0xFF;
-					sumg += rgb >> 8 & 0xFF;;
-					sumb +=  rgb&0xFF;
+					a = ALPHA(rgb);
+					sumr += RED(rgb);
+					sumg += GREEN(rgb);
+					sumb +=  BLUE(rgb);
 				}
 			}
 			
@@ -268,10 +289,10 @@ static __inline__ void gaussianBlur(jint* rgbBuf , int w , int h, int radius){
 			r = sumr / squared;
 			g = sumg / squared;
 			b = sumb / squared;
-			r = clamRGB(r);
-			g = clamRGB(g);
-			b = clamRGB(b);
-			rgbBuf[index] = a << 24 | r << 16 | g << 8 | b; 
+			r = clamp(r);
+			g = clamp(g);
+			b = clamp(b);
+			rgbBuf[index] = ARGB(a , r , g , b); 
 		}
 
 	
@@ -281,15 +302,15 @@ static __inline__ void gaussianBlur(jint* rgbBuf , int w , int h, int radius){
 static __inline__ int saturation1(int rgb , int level) {
 
 		if ( level != 1 ) {
-            int a = rgb & 0xff000000;
-            int r = (rgb >> 16) & 0xff;
-            int g = (rgb >> 8) & 0xff;
-            int b = rgb & 0xff;
+            int a = ALPHA(rgb);
+            int r = RED(rgb);
+            int g = GREEN(g);
+            int b = BLUE(b);
             int v = ( r + g + b )/3; 
-            r = clamRGB( (int)(v + level * (r-v)) );
-            g = clamRGB( (int)(v + level * (g-v)) );
-            b = clamRGB( (int)(v + level * (b-v)) );
-            return a | (r << 16) | (g << 8) | b;
+            r = clamp( (int)(v + level * (r-v)) );
+            g = clamp( (int)(v + level * (g-v)) );
+            b = clamp( (int)(v + level * (b-v)) );
+            return ARGB(a , r , g , b);
         }
         return rgb;
 }
@@ -297,9 +318,9 @@ static __inline__ void saturation2(int* r , int* g , int* b , int level) {
 
 		if ( level != 1 ) {
             int v = ( *r + *g + *b )/3; 
-            *r = clamRGB( (int)(v + level * (*r-v)) );
-            *g = clamRGB( (int)(v + level * (*g-v)) );
-            *b = clamRGB( (int)(v + level * (*b-v)) );
+            *r = clamp( (int)(v + level * (*r-v)) );
+            *g = clamp( (int)(v + level * (*g-v)) );
+            *b = clamp( (int)(v + level * (*b-v)) );
         }
 }
 
@@ -330,21 +351,17 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectColorMatrix(
     	
 				index = w * i + j;
 				rgb = srcTmpBuf[index];    
-				a = rgb >> 24 & 0xFF;
-    			r = rgb >> 16 & 0xFF;
-    			g = rgb >> 8 & 0xFF;
-    			b = rgb & 0xFF;
+				a = ALPHA(rgb);
+            	r = RED(rgb);
+            	g = GREEN(g);
+            	b = BLUE(b);
 				            
     			a = matrixTmpBuf[0] * a + matrixTmpBuf[1] * r + matrixTmpBuf[2] * g + matrixTmpBuf[3] * b + matrixTmpBuf[4] * 255;
     			r = matrixTmpBuf[5] * a + matrixTmpBuf[6] * r + matrixTmpBuf[7] * g + matrixTmpBuf[8] * b + matrixTmpBuf[9] * 255;
     			g = matrixTmpBuf[10] * a + matrixTmpBuf[11] * r + matrixTmpBuf[12] * g + matrixTmpBuf[13] * b + matrixTmpBuf[14] * 255;
     			b = matrixTmpBuf[15] * a + matrixTmpBuf[16] * r + matrixTmpBuf[17] * g + matrixTmpBuf[18] * b + matrixTmpBuf[19] * 255;
     			
-    			a = clamRGB(a);
-    			r = clamRGB(r);
-    			g = clamRGB(g);
-    			b = clamRGB(b);
-				srcTmpBuf[index] =  a << 24 | r << 16 | g << 8 | b; 
+				srcTmpBuf[index] =  ARGB(a , r , g , b); 
 			}
 	}
 
@@ -374,13 +391,10 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectSketch(
         return -1;  
     }
     
-    jintArray maskBuf = env->NewIntArray(srcSize);
-    if(maskBuf == NULL){
-    	env->ReleaseIntArrayElements(srcBuf, srcTmpBuf, 0);
-    	return -1;
-    }
-    env->SetIntArrayRegion(maskBuf, 0, srcSize, srcTmpBuf);
-    jint *maskTmpBuf = env->GetIntArrayElements(maskBuf, 0);  
+    int newSize = w * h;
+	jint maskTmpBuf[newSize]; // 新图像像素值
+	memcpy(maskTmpBuf , srcTmpBuf , newSize*sizeof(jint));
+	
     for(i = 0 ; i < h ; ++i){
     	for(j = 0 ; j < w ; ++j){
     	
@@ -389,30 +403,24 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectSketch(
 				int rgb2 =  srcTmpBuf[index];   
 				rgb1 = invertRGB(rgb1);
 				
-				int a1 = rgb1 >> 24 & 0xFF;
-    			int r1 = rgb1 >> 16 & 0xFF;
-    			int g1 = rgb1 >> 8 & 0xFF;
-    			int b1 = rgb1 & 0xFF;
+				int a1 = ALPHA(rgb1);
+    			int r1 = RED(rgb1);
+    			int g1 = GREEN(rgb1);
+    			int b1 = BLUE(rgb1);
     			
-    			int a2 = rgb2 >> 24 & 0xFF;
-    			int r2 = rgb2 >> 16 & 0xFF;
-    			int g2 = rgb2 >> 8 & 0xFF;
-    			int b2 = rgb2 & 0xFF;
+    			int a2 = ALPHA(rgb2);
+    			int r2 = RED(rgb2);
+    			int g2 = GREEN(rgb2);
+    			int b2 = BLUE(rgb2);
     			
     			r2 = ps_ColorDodgeFun(r2 , r1 , 0);
     			g2 = ps_ColorDodgeFun(g2 , g1 , 0);
     			b2 = ps_ColorDodgeFun(b2 , b1 , 0);
 				            
-				a2 = clamRGB(a2);
-				r2 = clamRGB(r2);
-				g2 = clamRGB(g2);
-				b2 = clamRGB(b2);
-				srcTmpBuf[index] =  a2 << 24 | r2 << 16 | g2 << 8 | b2; 
+				srcTmpBuf[index] =  ARGB(a2 , r2 , g2, b2); 
 			}
 	}
 
-	env->ReleaseIntArrayElements(maskBuf, maskTmpBuf, 0);
-	env->DeleteLocalRef(maskBuf);
     env->ReleaseIntArrayElements(srcBuf, srcTmpBuf, 0);
     return 0;
 }
@@ -446,16 +454,12 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectEmboss(
 				index = w * i + j;
 				rgb1 = srcTmpBuf[index];    
 				rgb2 = srcTmpBuf[index+1];    
-				a = rgb1 >> 24 & 0xFF;
-    			r = rgb2 >> 16 & 0xFF - rgb1 >> 16 & 0xFF + 127;
-    			g = rgb2 >> 8 & 0xFF - rgb1 >> 8 & 0xFF + 127;
-    			b = rgb2 & 0xFF - rgb1 & 0xFF + 127;
+				a = ALPHA(rgb1);
+    			r = RED(rgb2) - RED(rgb1) + 127;
+    			g = GREEN(rgb2) - GREEN(rgb1) + 127;
+    			b = BLUE(rgb2) - BLUE(rgb1) + 127;
 				            
-    			a = clamRGB(a);
-    			r = clamRGB(r);
-    			g = clamRGB(g);
-    			b = clamRGB(b);
-				srcTmpBuf[index] =  a << 24 | r << 16 | g << 8 | b; 
+				srcTmpBuf[index] = ARGB(a , r , g , b); 
 			}
 	}
 
@@ -489,8 +493,9 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectGrayscale(
     	
 				index = w * i + j;
 				rgb = srcTmpBuf[index];    
+				int a = ALPHA(rgb);
 				rgb = grayScale(rgb);
-				srcTmpBuf[index] =  a << 24 | rgb << 16 | rgb << 8 | rgb; 
+				srcTmpBuf[index] =  ARGB(a , rgb , rgb , rgb); 
 			}
 	}
 
@@ -520,112 +525,38 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectOld(
     int r,g,b;
     int nr,ng,nb;
     
-    int srcSize = env->GetArrayLength(srcBuf);
-    jintArray tmpBuf1 = env->NewIntArray(srcSize);
-    if(tmpBuf1 == NULL){
-    	env->ReleaseIntArrayElements(srcBuf, srcTmpBuf, 0);
-    	env->ReleaseIntArrayElements(maskBuf, maskTmpBuf, 0);
-    	return -1;
-    }
-    env->SetIntArrayRegion(tmpBuf1, 0, srcSize, srcTmpBuf);
-    jint *tmpBuf11 = env->GetIntArrayElements(tmpBuf1, 0);  
-    
-    for(i = 0 ; i < h ; ++i){
+	for(i = 0 ; i < h ; ++i){
     	for(j = 0 ; j < w ; ++j){
     	
 				index = w * i + j;
-				rgb = tmpBuf11[index];    
+				int rgb = srcTmpBuf[index];
+				int rgb2 =  maskTmpBuf[index];
+				
+				int a = ALPHA(rgb);
 				rgb = grayScale(rgb);
-				tmpBuf11[index] =  a << 24 | rgb << 16 | rgb << 8 | rgb; 
-			}
-	}
-	
-	//高斯模糊
-	gaussianBlur(tmpBuf11 , w , h , 2);
-	
-	for(i = 0 ; i < h ; ++i){
-    	for(j = 0 ; j < w ; ++j){
-    	
-				index = w * i + j;
-				rgb = tmpBuf11[index];
-				a = rgb >> 24 & 0xFF;
-    			r = rgb >> 16 & 0xFF;
-    			g = rgb >> 8 & 0xFF;
-    			b = rgb & 0xFF;
+				rgb =  ARGB(a , rgb , rgb , rgb);
+    			a = ALPHA(rgb);
+    			int r = RED(rgb);
+    			int g = GREEN(rgb);
+    			int b = BLUE(rgb);
     			
-    			r = ps_softlightFun(r , 252 , 0);
-    			g = ps_softlightFun(g , 125 , 0);
-    			b = ps_softlightFun(b , 0 , 0);
+    			saturation2(&r , &g , &b , 0);
+    			r = ps_softlightFun(r , 220 , 0);
+    			g = ps_softlightFun(g , 134 , 0);
+    			b = ps_softlightFun(b , 49 , 0);
+    			
+    			int a2 = ALPHA(rgb2);
+    			int r2 = RED(rgb2);
+    			int g2 = GREEN(rgb2);
+    			int b2 = BLUE(rgb2);
+    			r = ps_DevideFun(r , r2 , 0);
+    			g = ps_DevideFun(g , g2 , 0);
+    			b = ps_DevideFun(b , b2 , 0);
 				            
-				r = clamRGB(r);
-				g = clamRGB(g);
-				b = clamRGB(b);
-				tmpBuf11[index] =  a << 24 | r << 16 | g << 8 | b; 
+				srcTmpBuf[index] =  ARGB(a , r , g , b); 
 			}
 	}
 	
-	for(i = 0 ; i < h ; ++i){
-    	for(j = 0 ; j < w ; ++j){
-    	
-				index = w * i + j;
-				int rgb1 = srcTmpBuf[index];
-				int rgb2 =  tmpBuf11[index];   
-				
-				int a1 = rgb1 >> 24 & 0xFF;
-    			int r1 = rgb1 >> 16 & 0xFF;
-    			int g1 = rgb1 >> 8 & 0xFF;
-    			int b1 = rgb1 & 0xFF;
-    			
-    			int a2 = rgb2 >> 24 & 0xFF;
-    			int r2 = rgb2 >> 16 & 0xFF;
-    			int g2 = rgb2 >> 8 & 0xFF;
-    			int b2 = rgb2 & 0xFF;
-    			
-    			saturation2(&r1 , &g1 , &b1 , 0);
-    			r1 = ps_softlightFun(r1 , r2 , 0);
-    			g1 = ps_softlightFun(g1 , g2 , 0);
-    			b1 = ps_softlightFun(b1 , b2 , 0);
-				            
-				a1 = clamRGB(a1);
-				r1 = clamRGB(r1);
-				g1 = clamRGB(g1);
-				b1 = clamRGB(b1);
-				srcTmpBuf[index] =  a1 << 24 | r1 << 16 | g1 << 8 | b1; 
-			}
-	}
-	
-	for(i = 0 ; i < h ; ++i){
-    	for(j = 0 ; j < w ; ++j){
-    	
-				index = w * i + j;
-				int rgb1 = srcTmpBuf[index];
-				int rgb2 =  maskTmpBuf[index];   
-				
-				int a1 = rgb1 >> 24 & 0xFF;
-    			int r1 = rgb1 >> 16 & 0xFF;
-    			int g1 = rgb1 >> 8 & 0xFF;
-    			int b1 = rgb1 & 0xFF;
-    			
-    			int a2 = rgb2 >> 24 & 0xFF;
-    			int r2 = rgb2 >> 16 & 0xFF;
-    			int g2 = rgb2 >> 8 & 0xFF;
-    			int b2 = rgb2 & 0xFF;
-    			
-    			r1 = ps_DevideFun(r1 , r2 , 0);
-    			g1 = ps_DevideFun(g1 , g2 , 0);
-    			b1 = ps_DevideFun(b1 , b2 , 0);
-				            
-				a1 = clamRGB(a1);
-				r1 = clamRGB(r1);
-				g1 = clamRGB(g1);
-				b1 = clamRGB(b1);
-				srcTmpBuf[index] =  a1 << 24 | r1 << 16 | g1 << 8 | b1; 
-			}
-	}
-	
-
-	env->ReleaseIntArrayElements(tmpBuf1, tmpBuf11, 0);
-	env->DeleteLocalRef(tmpBuf1);
     env->ReleaseIntArrayElements(srcBuf, srcTmpBuf, 0);
     env->ReleaseIntArrayElements(maskBuf, maskTmpBuf, 0);       
     return 0;    
@@ -675,10 +606,10 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeAdjustChannel(
     	
 				index = w * i + j;
 				rgb = srcTmpBuf[index];  
-				a = rgb >> 24 & 0xFF;
-    			r = rgb >> 16 & 0xFF;
-    			g = rgb >> 8 & 0xFF;
-    			b = rgb & 0xFF;  
+				a = ALPHA(rgb);
+    			r = RED(rgb);
+    			g = GREEN(rgb);
+    			b = BLUE(rgb);  
     			
     			if(adjustChannel == CHANNEL_RGB){
                     r = level[r];
@@ -691,11 +622,7 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeAdjustChannel(
     			}else if(adjustChannel == CHANNEL_B){
     				b = level[b];
     			} 
-    			a = clamRGB(a);
-    			g = clamRGB(g);
-    			b = clamRGB(b);
-    			r = clamRGB(r);
-    			srcTmpBuf[index] = a << 24 | r << 16 | g << 8 | b; 
+    			srcTmpBuf[index] = ARGB(a , r , g , b); 
 			}
 	}
 
@@ -718,9 +645,9 @@ static __inline__ void contrast(int* r , int* g , int* b , float value){
     green = (((green - 0.5f) * value) + 0.5f) * 255.0f;
     blue = (((blue - 0.5f) * value) + 0.5f) * 255.0f;
     
-    *r = clamRGB(red);
-    *g = clamRGB(green);
-    *b = clamRGB(blue);
+    *r = clamp(red);
+    *g = clamp(green);
+    *b = clamp(blue);
 }
 #ifdef __cplusplus
 extern "C" {
@@ -741,13 +668,13 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectAdjustContrast(
     	
 				index = w * i + j;
 				rgb = srcTmpBuf[index];  
-				a = rgb >> 24 & 0xFF;
-    			r = rgb >> 16 & 0xFF;
-    			g = rgb >> 8 & 0xFF;
-    			b = rgb & 0xFF;  
+				a = ALPHA(rgb);
+    			r = RED(rgb);
+    			g = GREEN(rgb);
+    			b = BLUE(rgb);  
     			
     			contrast(&r , &g , &b , value);
-    			srcTmpBuf[index] = a << 24 | r << 16 | g << 8 | b; 
+    			srcTmpBuf[index] = ARGB(a , r , g , b); 
 			}
 	}
 
@@ -764,9 +691,9 @@ static __inline__ void brightness(int* r , int* g , int* b , float value){
 	if(value > 255) value = 255;
 	value = 1 + value / 255.0f;
 	
-    *r = clamRGB((*r)*value);
-    *g = clamRGB((*g)*value);
-    *b = clamRGB((*b)*value);
+    *r = clamp((*r)*value);
+    *g = clamp((*g)*value);
+    *b = clamp((*b)*value);
 }
 #ifdef __cplusplus
 extern "C" {
@@ -787,13 +714,13 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectAdjustBrightness
     	
 				index = w * i + j;
 				rgb = srcTmpBuf[index];  
-				a = rgb >> 24 & 0xFF;
-    			r = rgb >> 16 & 0xFF;
-    			g = rgb >> 8 & 0xFF;
-    			b = rgb & 0xFF;  
+				a = ALPHA(rgb);
+    			r = RED(rgb);
+    			g = GREEN(rgb);
+    			b = BLUE(rgb);  
     			
     			brightness(&r , &g , &b , value);
-    			srcTmpBuf[index] = a << 24 | r << 16 | g << 8 | b; 
+    			srcTmpBuf[index] = ARGB(a , r , g , b); 
 			}
 	}
 
@@ -806,9 +733,9 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectAdjustBrightness
 
 static __inline__ void gamma(int* r , int* g , int* b , float value){
 	
-    *r = clamRGB(pow(*r , value));
-    *g = clamRGB(pow(*g , value));
-    *b = clamRGB(pow(*b , value));
+    *r = clamp(pow(*r , value));
+    *g = clamp(pow(*g , value));
+    *b = clamp(pow(*b , value));
 }
 #ifdef __cplusplus
 extern "C" {
@@ -829,13 +756,13 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectAdjustGamma(
     	
 				index = w * i + j;
 				rgb = srcTmpBuf[index];  
-				a = rgb >> 24 & 0xFF;
-    			r = rgb >> 16 & 0xFF;
-    			g = rgb >> 8 & 0xFF;
-    			b = rgb & 0xFF;  
+				a = ALPHA(rgb);
+    			r = RED(rgb);
+    			g = GREEN(rgb);
+    			b = BLUE(rgb);  
     			
     			gamma(&r , &g , &b , value);
-    			srcTmpBuf[index] = a << 24 | r << 16 | g << 8 | b; 
+    			srcTmpBuf[index] = ARGB(a , r , g , b); 
 			}
 	}
 
@@ -846,131 +773,165 @@ int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectAdjustGamma(
 }
 #endif
 
-
-
-int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectOld(    
-        JNIEnv* env, jobject obj , jintArray srcBuf, jintArray maskBuf , int w , int h) { 
-        
-    jint *srcTmpBuf = env->GetIntArrayElements(srcBuf, 0);  
-    jint *maskTmpBuf = env->GetIntArrayElements(maskBuf, 0);   
-    int alpha = 0xFF << 24;
-    int i = 0;
-    int j = 0;
-    int index = 0;
-    int rgb;
-    int a;
-    int r,g,b;
-    int nr,ng,nb;
+#ifdef __cplusplus
+extern "C" {
+#endif
+int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectSunShine(    
+        JNIEnv* env, jobject obj , jintArray srcBuf, jint w, jint h,jint centerX, jint centerY, jint radius, jint strength) { 
     
-    int srcSize = env->GetArrayLength(srcBuf);
-    jintArray tmpBuf1 = env->NewIntArray(srcSize);
-    if(tmpBuf1 == NULL){
-    	env->ReleaseIntArrayElements(srcBuf, srcTmpBuf, 0);
-    	env->ReleaseIntArrayElements(maskBuf, maskTmpBuf, 0);
-    	return -1;
-    }
-    env->SetIntArrayRegion(tmpBuf1, 0, srcSize, srcTmpBuf);
-    jint *tmpBuf11 = env->GetIntArrayElements(tmpBuf1, 0);  
-    
-    for(i = 0 ; i < h ; ++i){
-    	for(j = 0 ; j < w ; ++j){
-    	
-				index = w * i + j;
-				rgb = tmpBuf11[index];    
-				rgb = grayScale(rgb);
-				tmpBuf11[index] =  a << 24 | rgb << 16 | rgb << 8 | rgb; 
-			}
-	}
-	
-	//高斯模糊
-	gaussianBlur(tmpBuf11 , w , h , 2);
-	
-	for(i = 0 ; i < h ; ++i){
-    	for(j = 0 ; j < w ; ++j){
-    	
-				index = w * i + j;
-				rgb = tmpBuf11[index];
-				a = rgb >> 24 & 0xFF;
-    			r = rgb >> 16 & 0xFF;
-    			g = rgb >> 8 & 0xFF;
-    			b = rgb & 0xFF;
-    			
-    			r = ps_softlightFun(r , 252 , 0);
-    			g = ps_softlightFun(g , 125 , 0);
-    			b = ps_softlightFun(b , 0 , 0);
-				            
-				r = clamRGB(r);
-				g = clamRGB(g);
-				b = clamRGB(b);
-				tmpBuf11[index] =  a << 24 | r << 16 | g << 8 | b; 
-			}
-	}
-	
-	for(i = 0 ; i < h ; ++i){
-    	for(j = 0 ; j < w ; ++j){
-    	
-				index = w * i + j;
-				int rgb1 = srcTmpBuf[index];
-				int rgb2 =  tmpBuf11[index];   
-				
-				int a1 = rgb1 >> 24 & 0xFF;
-    			int r1 = rgb1 >> 16 & 0xFF;
-    			int g1 = rgb1 >> 8 & 0xFF;
-    			int b1 = rgb1 & 0xFF;
-    			
-    			int a2 = rgb2 >> 24 & 0xFF;
-    			int r2 = rgb2 >> 16 & 0xFF;
-    			int g2 = rgb2 >> 8 & 0xFF;
-    			int b2 = rgb2 & 0xFF;
-    			
-    			saturation2(&r1 , &g1 , &b1 , 0);
-    			r1 = ps_softlightFun(r1 , r2 , 0);
-    			g1 = ps_softlightFun(g1 , g2 , 0);
-    			b1 = ps_softlightFun(b1 , b2 , 0);
-				            
-				a1 = clamRGB(a1);
-				r1 = clamRGB(r1);
-				g1 = clamRGB(g1);
-				b1 = clamRGB(b1);
-				srcTmpBuf[index] =  a1 << 24 | r1 << 16 | g1 << 8 | b1; 
-			}
-	}
-	
-	for(i = 0 ; i < h ; ++i){
-    	for(j = 0 ; j < w ; ++j){
-    	
-				index = w * i + j;
-				int rgb1 = srcTmpBuf[index];
-				int rgb2 =  maskTmpBuf[index];   
-				
-				int a1 = rgb1 >> 24 & 0xFF;
-    			int r1 = rgb1 >> 16 & 0xFF;
-    			int g1 = rgb1 >> 8 & 0xFF;
-    			int b1 = rgb1 & 0xFF;
-    			
-    			int a2 = rgb2 >> 24 & 0xFF;
-    			int r2 = rgb2 >> 16 & 0xFF;
-    			int g2 = rgb2 >> 8 & 0xFF;
-    			int b2 = rgb2 & 0xFF;
-    			
-    			r1 = ps_DevideFun(r1 , r2 , 0);
-    			g1 = ps_DevideFun(g1 , g2 , 0);
-    			b1 = ps_DevideFun(b1 , b2 , 0);
-				            
-				a1 = clamRGB(a1);
-				r1 = clamRGB(r1);
-				g1 = clamRGB(g1);
-				b1 = clamRGB(b1);
-				srcTmpBuf[index] =  a1 << 24 | r1 << 16 | g1 << 8 | b1; 
-			}
-	}
-	
+    jint * cbuf;
+	cbuf = env->GetIntArrayElements(srcBuf, 0);
 
-	env->ReleaseIntArrayElements(tmpBuf1, tmpBuf11, 0);
-	env->DeleteLocalRef(tmpBuf1);
-    env->ReleaseIntArrayElements(srcBuf, srcTmpBuf, 0);
-    env->ReleaseIntArrayElements(maskBuf, maskTmpBuf, 0);       
-    return 0;    
+	radius = min(centerX, centerY);
+	int i = 0;
+	int j = 0;
+	for (i = 0; i < w; i++) {
+		for (j = 0; j < h; j++) {
+			int curr_color = cbuf[j * w + i];
+
+			int pixR = RED(curr_color);
+			int pixG = GREEN(curr_color);
+			int pixB = BLUE(curr_color);
+
+			int newR = pixR;
+			int newG = pixG;
+			int newB = pixB;
+			int distance = (int) ((centerY - i) * (centerY - i) + (centerX - j) * (centerX - j));
+			if (distance < radius * radius)
+			{
+				int result = (int) (strength * (1.0 - sqrt((double)distance) / radius));
+				newR = pixR + result;
+				newG = pixG + result;
+				newB = pixB + result;
+			}
+
+			int a = ALPHA(curr_color);
+			int modif_color = ARGB(a, newR, newG, newB);
+			cbuf[j * w + i] = modif_color;
+		}
+	}
+	env->ReleaseIntArrayElements(srcBuf, cbuf, 0);
+	return 0;
+}
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+jint JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectFangDaJing(    
+        JNIEnv* env, jobject obj , jintArray buf, jint w, jint h,jint centerX, jint centerY, jint radius, jfloat multiple) { 
+    
+   	jint * cbuf;
+	cbuf = env->GetIntArrayElements(buf, 0);
+	int newSize = w * h;
+	jint rbuf[newSize]; // 新图像像素值
+
+	float xishu = multiple;
+	int real_radius = (int)(radius / xishu);
+
+	int i = 0, j = 0;
+	for (i = 0; i < w; i++)
+	{
+		for (j = 0; j < h; j++)
+		{
+			int curr_color = cbuf[j * w + i];
+
+			int pixR = RED(curr_color);
+			int pixG = GREEN(curr_color);
+			int pixB = BLUE(curr_color);
+			int pixA = ALPHA(curr_color);
+
+			int newR = pixR;
+			int newG = pixG;
+			int newB = pixB;
+			int newA = pixA;
+
+			int distance = (int) ((centerX - i) * (centerX - i) + (centerY - j) * (centerY - j));
+			if (distance < radius * radius)
+			{
+				// 图像放大效果
+				int src_x = (int)((float)(i - centerX) / xishu + centerX);
+				int src_y = (int)((float)(j - centerY) / xishu + centerY);
+
+				int src_color = cbuf[src_y * w + src_x];
+				newR = RED(src_color);
+				newG = GREEN(src_color);
+				newB = BLUE(src_color);
+				newA = ALPHA(src_color);
+			}
+
+			int modif_color = ARGB(newA, newR, newG, newB);
+			rbuf[j * w + i] = modif_color;
+		}
+	}
+
+	env->SetIntArrayRegion(buf, 0, newSize, rbuf);
+	env->ReleaseIntArrayElements(buf, cbuf, 0);
+	return 0;
+}
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+int JNICALL Java_com_funlib_imagefilter_ImageFilter_nativeEffectHaHaJing(    
+        JNIEnv* env, jobject obj , jintArray buf, jint width, jint height,jint centerX, jint centerY, jint radius, jfloat multiple) { 
+    
+   	jint * cbuf;
+		cbuf = env->GetIntArrayElements(buf, 0);
+		int newSize = width * height;
+	jint rbuf[newSize]; // 新图像像素值
+
+		float xishu = multiple;
+		int real_radius = (int)(radius / xishu);
+
+		int i = 0, j = 0;
+		for (i = 0; i < width; i++)
+		{
+			for (j = 0; j < height; j++)
+			{
+				int curr_color = cbuf[j * width + i];
+
+				int pixR = RED(curr_color);
+				int pixG = GREEN(curr_color);
+				int pixB = BLUE(curr_color);
+				int pixA = ALPHA(curr_color);
+
+				int newR = pixR;
+				int newG = pixG;
+				int newB = pixB;
+				int newA = pixA;
+
+				int distance = (int) ((centerX - i) * (centerX - i) + (centerY - j) * (centerY - j));
+				if (distance < radius * radius)
+				{
+					// 放大镜的凹凸效果
+					int src_x = (int) ((float) (i - centerX) / xishu);
+					int src_y = (int) ((float) (j - centerY) / xishu);
+					src_x = (int)(src_x * (sqrt((double)distance) / real_radius));
+					src_y = (int)(src_y * (sqrt((double)distance) / real_radius));
+					src_x = src_x + centerX;
+					src_y = src_y + centerY;
+
+					int src_color = cbuf[src_y * width + src_x];
+					newR = RED(src_color);
+					newG = GREEN(src_color);
+					newB = BLUE(src_color);
+					newA = ALPHA(src_color);
+				}
+
+				int modif_color = ARGB(newA, newR, newG, newB);
+				rbuf[j * width + i] = modif_color;
+			}
+		}
+
+	env->SetIntArrayRegion(buf, 0, newSize, rbuf);
+	env->ReleaseIntArrayElements(buf, cbuf, 0);
+	return 0;
 }
 #ifdef __cplusplus
 }
